@@ -14,7 +14,7 @@ plain CSS and a little vanilla JS. No frontend framework.
 | Stage | What | Status |
 |---|---|---|
 | 1 | Project skeleton, database models, seed data | ✅ done |
-| 2 | Home page and Revival Car page | ⏳ |
+| 2 | Home page and Revival Car page | ✅ done |
 | 3 | Shop and mock checkout with code generation | ⏳ |
 | 4 | Voting | ⏳ |
 | 5 | The Garage | ⏳ |
@@ -88,11 +88,18 @@ app/
     garage.py          member cars, Car of the Month
     meets.py           meet drops
     security.py        failed-attempt log for rate limiting
+  security_headers.py  Content-Security-Policy and other strict browser headers
   services/            business rules as plain functions (routes stay thin)
     codes.py           secure code generation and lookup
+    fund.py            raised / spent / on hand, and progress toward the current goal
+    embeds.py          turns YouTube/TikTok links into safe embed URLs (others are rejected)
   routes/              one Flask blueprint per site section
-  templates/           Jinja templates
-  static/              CSS and JS
+    main.py            home page
+    car.py             Revival Car page (profile, totals, installs, build log)
+    errors.py          friendly 404 / 413 / 500 pages
+  templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
+  static/css/style.css the whole look: mobile-first, dark garage theme, no framework
+  static/js/site.js    mobile menu + click-to-load videos (pages work without it)
 seed.py                sample data (WIPES the database)
 seed_images.py         draws placeholder photos with Pillow
 tests/                 pytest smoke tests
@@ -112,6 +119,11 @@ tests/                 pytest smoke tests
   3-pack gives three votes.
 - **One vote per code per round** is enforced by a database unique constraint,
   not just by app code.
+- **Install videos load only when tapped.** The page shows a play button, and
+  YouTube (privacy-enhanced domain) or TikTok is contacted only after a tap.
+  Shorts and TikToks are shown in a vertical frame.
+- **Content-Security-Policy** allows scripts and styles from this site only, and
+  frames only from YouTube/TikTok. There is no inline JavaScript anywhere.
 - **Rate limiting** records wrong code guesses per IP in the database, so it
   works across several server processes.
 

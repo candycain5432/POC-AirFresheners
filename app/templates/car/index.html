@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "partials/progress.html" import progress_bar %}
+{% from "partials/video.html" import install_video %}
+{% block title %}The Revival Car{% endblock %}
+
+{% block content %}
+{% if not car %}
+  <section class="wrap page-section narrow"><h1>The Revival Car</h1><p>No project car yet. Check back soon.</p></section>
+{% else %}
+
+{# ---------- Profile ---------- #}
+<section class="wrap page-section">
+  <p class="eyebrow">The Revival Car</p>
+  <h1 class="page-title">{{ car.nickname }}</h1>
+  <p class="lead">{{ car.description }}{% if car.acquired_on %} · rescued {{ car.acquired_on | nice_date }}{% endif %}</p>
+
+  {% if car.photos %}
+    {# Swipeable on phones (CSS scroll-snap), a grid on wider screens. #}
+    <div class="gallery" tabindex="0" aria-label="Photos of {{ car.nickname }}">
+      {% for photo in car.photos %}
+        <figure>
+          <img src="{{ url_for('uploads.uploaded_file', filename=photo.filename) }}"
+               alt="{{ photo.caption or car.nickname }}" loading="lazy" width="960" height="720">
+          {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+        </figure>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+
+{# ---------- Story ---------- #}
+<section class="wrap page-section narrow">
+  <h2 class="section-title">The story</h2>
+  <div class="story">
+    {# Split on blank lines into paragraphs; each part is still auto-escaped. #}
+    {% for paragraph in car.story.split('\n\n') %}<p>{{ paragraph }}</p>{% endfor %}
+  </div>
+</section>
+
+{# ---------- Money ---------- #}
+<section class="wrap page-section">
+  <h2 class="section-title">The fund</h2>
+  <div class="stats">
+    <div class="stat"><span class="stat-label">Total raised</span><span class="stat-value">{{ fund.raised | money(false) }}</span></div>
+    <div class="stat"><span class="stat-label">Total spent</span><span class="stat-value">{{ fund.spent | money(false) }}</span></div>
+    <div class="stat"><span class="stat-label">In the kitty</span><span class="stat-value rust">{{ fund.on_hand | money(false) }}</span></div>
+  </div>
+  {{ progress_bar(fund) }}
+</section>
+
+{# ---------- Completed parts ---------- #}
+<section class="wrap page-section">
+  <h2 class="section-title">Parts installed <span class="count">{{ installs | length }}</span></h2>
+  {% for install in installs %}
+    <article class="work-order install" id="install-{{ install.id }}">
+      <header class="wo-header">
+        <p class="wo-label">Work order #{{ '%03d' % install.id }}</p>
+        <h3>{{ install.part_name }}</h3>
+        <dl class="wo-fields">
+          <div><dt>Tier</dt><dd><span class="part-tag part-tag-small">{{ install.tier | tier_label }}</span></dd></div>
+          <div><dt>Cost</dt><dd>{{ install.cost_cents | money }}</dd></div>
+          <div><dt>Installed</dt><dd>{{ install.installed_on | nice_date }}</dd></div>
+        </dl>
+      </header>
+      {% if install.notes %}<p class="wo-notes">{{ install.notes }}</p>{% endif %}
+      <div class="install-media">
+        <div class="install-video">{{ install_video(install) }}</div>
+        {% if install.photos %}
+          <div class="before-after">
+            {% for photo in install.before_photos[:1] + install.after_photos[:1] %}
+              <figure>
+                <img src="{{ url_for('uploads.uploaded_file', filename=photo.filename) }}"
+                     alt="{{ install.part_name }}, {{ photo.kind }}" loading="lazy" width="960" height="720">
+                <figcaption class="stamp stamp-{{ photo.kind }}">{{ photo.kind }}</figcaption>
+              </figure>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </article>
+  {% else %}
+    <p class="muted">No parts installed yet.</p>
+  {% endfor %}
+</section>
+
+{# ---------- Build log timeline ---------- #}
+<section class="wrap page-section narrow">
+  <h2 class="section-title">Build log</h2>
+  <ol class="timeline">
+    {% for entry in timeline %}
+      <li class="timeline-item timeline-{{ entry.kind }}">
+        <time datetime="{{ entry.date.isoformat() }}">{{ entry.date | nice_date }}</time>
+        {% if entry.kind == 'install' %}
+          <h3><a href="#install-{{ entry.item.id }}">Installed: {{ entry.item.part_name }}</a></h3>
+          <p class="muted">{{ entry.item.tier | tier_label }} · {{ entry.item.cost_cents | money(false) }}</p>
+        {% else %}
+          <h3>{{ entry.item.title }}</h3>
+          {% if entry.item.body %}<p>{{ entry.item.body }}</p>{% endif %}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endif %}
+{% endblock %}

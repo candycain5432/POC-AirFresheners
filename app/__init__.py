@@ -48,6 +48,9 @@ def create_app(config_overrides=None):
     from .cli import register_cli
     register_cli(app)
 
+    from .security_headers import register_security_headers
+    register_security_headers(app)
+
     # Create any missing tables. Fine for a proof of concept; a real app
     # would use migrations (e.g. Flask-Migrate) instead.
     with app.app_context():

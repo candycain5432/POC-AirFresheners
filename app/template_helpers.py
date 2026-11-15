@@ -5,7 +5,9 @@ Usage in a template:  {{ product.price_cents | money }}  ->  "$8.00"
 """
 from datetime import datetime, timezone
 
+from .models.voting import TIER_LABELS
 from .services.codes import format_code
+from .services.embeds import embed_info
 
 
 def money(cents, show_cents=True):
@@ -29,6 +31,8 @@ def register_template_helpers(app):
     app.jinja_env.filters["money"] = money
     app.jinja_env.filters["nice_date"] = nice_date
     app.jinja_env.filters["code"] = format_code
+    app.jinja_env.filters["tier_label"] = lambda level: TIER_LABELS.get(level, level)
+    app.jinja_env.globals["embed_info"] = embed_info
 
     @app.context_processor
     def inject_globals():

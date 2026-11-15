@@ -1,0 +1,23 @@
+{#
+  Install video, loaded only when tapped ("click to load"). This keeps the
+  page fast on phones and means YouTube/TikTok see nothing until the visitor
+  chooses to play. Without JavaScript, the plain link still works.
+#}
+{% macro install_video(install) %}
+  {% set video = embed_info(install.video_url) %}
+  {% if video %}
+    <div class="video-frame {{ 'is-vertical' if video.vertical }}"
+         data-embed-src="{{ video.src }}" data-embed-title="Install video: {{ install.part_name }}">
+      <button type="button" class="video-play">
+        <span class="play-icon" aria-hidden="true">▶</span>
+        <span>Play install video</span>
+        <span class="video-provider">{{ 'YouTube' if video.provider == 'youtube' else 'TikTok' }}</span>
+      </button>
+    </div>
+    <p class="video-link"><a href="{{ video.url }}" rel="noopener noreferrer" target="_blank">Open video on {{ 'YouTube' if video.provider == 'youtube' else 'TikTok' }} ↗</a></p>
+  {% elif install.video_url %}
+    <p class="muted">Video link not supported yet.</p>
+  {% else %}
+    <p class="muted">Video coming soon.</p>
+  {% endif %}
+{% endmacro %}

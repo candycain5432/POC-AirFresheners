@@ -1,0 +1,76 @@
+{#
+  Base layout: every page "extends" this file and fills in the blocks.
+  Jinja escapes every {{ variable }} automatically, so user text can't inject HTML.
+#}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Rust &amp; Revival{% endblock %} · Rust &amp; Revival</title>
+  <meta name="description" content="{% block description %}Handmade car air fresheners. Every sale helps bring a dead car back to life.{% endblock %}">
+  <meta name="theme-color" content="#141210">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {# Not deferred: it must add the "js" class before the page draws. Its other work waits for DOMContentLoaded. #}
+  <script src="{{ url_for('static', filename='js/site.js') }}"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="logo" href="{{ url_for('main.home') }}" aria-label="Rust and Revival home">
+        {# Simple hex-bolt mark drawn in SVG: no carmaker logos anywhere. #}
+        <svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true">
+          <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" />
+          <circle cx="20" cy="20" r="7" />
+        </svg>
+        <span class="logo-text">Rust <span class="amp">&amp;</span> Revival</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="nav-toggle-bars" aria-hidden="true"></span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      {% set nav = [
+        ('main.home', 'Home'),
+        ('car.index', 'Revival Car'),
+        ('vote.index', 'Vote'),
+        ('shop.index', 'Shop'),
+        ('garage.index', 'Garage'),
+        ('meets.index', 'Meets'),
+      ] %}
+      <nav id="site-nav" class="site-nav" aria-label="Main">
+        <ul>
+          {% for endpoint, label in nav %}
+            <li><a href="{{ url_for(endpoint) }}"
+                   {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  {# One-time messages (e.g. "Thanks for voting!") set with flash() in a route. #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="wrap flashes">
+        {% for category, message in messages %}
+          <p class="flash flash-{{ category }}" role="status">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="hazard-strip" aria-hidden="true"></div>
+    <div class="wrap footer-row">
+      <p class="poc-note"><strong>Proof of concept: no real purchases are processed.</strong></p>
+      <p class="muted">Handmade aroma-bead fresheners · Every sale funds the Revival Car · © {{ current_year }} Rust &amp; Revival</p>
+    </div>
+  </footer>
+</body>
+</html>
