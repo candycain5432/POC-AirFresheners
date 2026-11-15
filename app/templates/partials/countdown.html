@@ -1,0 +1,26 @@
+{#
+  Vote countdown. Usage:
+    {% from "partials/countdown.html" import countdown_box %}
+    {{ countdown_box(round, seconds_left, countdown) }}
+  seconds_left / countdown come from services/voting.py (seconds_left, split_duration).
+#}
+{% macro countdown_box(round_, seconds_left, countdown) %}
+      {# Countdown. The close time comes from the database (vote_round.closes_at, UTC).
+         The numbers below are correct when the page loads; site.js keeps them ticking. #}
+      {% if round_.closes_at %}
+        <div class="countdown {{ 'is-closed' if seconds_left == 0 }}" role="timer"
+             data-closes-at="{{ round_.closes_at.isoformat() }}Z">
+          <p class="countdown-label">Voting closes in</p>
+          <div class="countdown-units">
+            {% for unit, text in [('days', 'Days'), ('hours', 'Hrs'), ('minutes', 'Min'), ('seconds', 'Sec')] %}
+              <span class="cd-unit">
+                <span class="cd-num" data-unit="{{ unit }}">{{ '%02d' % countdown[unit] }}</span>
+                <span class="cd-label">{{ text }}</span>
+              </span>
+            {% endfor %}
+          </div>
+          <p class="countdown-closed" {% if seconds_left != 0 %}hidden{% endif %}>Voting closed</p>
+          <p class="countdown-when">Closes <time datetime="{{ round_.closes_at.isoformat() }}Z">{{ round_.closes_at | nice_datetime }}</time></p>
+        </div>
+      {% endif %}
+{% endmacro %}

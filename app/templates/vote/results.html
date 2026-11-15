@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "partials/countdown.html" import countdown_box %}
+{% from "partials/results.html" import results_grid %}
+{% block title %}{{ round.title }}: results{% endblock %}
+
+{% block content %}
+<section class="wrap page-section">
+  <div class="vote-top">
+    <div class="section-head">
+      <div class="tag-row">
+        {% if open_now %}<span class="eyebrow tag-accent">Vote open</span>{% else %}<span class="eyebrow">Round closed</span>{% endif %}
+        <span class="part-tag">{{ results.total }} vote{{ 's' if results.total != 1 }}</span>
+      </div>
+      <h1 class="page-title">{{ round.title }}</h1>
+      <p class="lead">{{ 'Standings so far.' if open_now else 'Final results.' }}
+        {% if my_tier_id %}Your vote is marked below.{% endif %}</p>
+    </div>
+    {% if open_now %}{{ countdown_box(round, seconds_left, countdown) }}{% endif %}
+  </div>
+
+  {# ---------- The winner, once the round is closed ---------- #}
+  {% if not open_now and round.winning_tier %}
+    {% set w = round.winning_tier %}
+    <div class="winner-banner">
+      <div class="checker-strip" aria-hidden="true"></div>
+      <div class="winner-body">
+        <p class="eyebrow">Winner</p>
+        <h2>{{ w.option.name }} <span class="part-tag">{{ w.level_label }}</span></h2>
+        <p>{{ w.goal_cents | money(false) }} goal.
+          {% if winner_goal and winner_goal.status == 'active' %}Now funding: <a href="{{ url_for('car.index') }}">see the progress bar</a>.
+          {% elif winner_goal and winner_goal.status == 'queued' %}Up next, once the part being funded now is installed.
+          {% elif winner_goal and winner_goal.status == 'installed' %}Installed! <a href="{{ url_for('car.index') }}">Watch the video</a>.
+          {% endif %}</p>
+      </div>
+    </div>
+  {% elif not open_now %}
+    <p class="notice">Nobody voted in this round, so no part was chosen.</p>
+  {% endif %}
+
+  {{ results_grid(results, my_tier_id=my_tier_id, leading_word='Leading' if open_now else 'Winner') }}
+
+  <div class="vote-cta">
+    {% if open_now %}
+      <a class="btn" href="{{ url_for('vote.index') }}">Vote with another code</a>
+      <a class="btn btn-ghost" href="{{ url_for('shop.index') }}">Get more codes</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('vote.index') }}">Back to voting</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

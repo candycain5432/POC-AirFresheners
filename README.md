@@ -16,7 +16,7 @@ plain CSS and a little vanilla JS. No frontend framework.
 | 1 | Project skeleton, database models, seed data | ✅ done |
 | 2 | Home page and Revival Car page | ✅ done |
 | 3 | Shop and mock checkout with code generation | ✅ done |
-| 4 | Voting | ⏳ |
+| 4 | Voting | ✅ done |
 | 5 | The Garage | ⏳ |
 | 6 | Meet drops | ⏳ |
 | 7 | Admin panel | ⏳ |
@@ -105,12 +105,14 @@ app/
     checkout.py        create_pending_order() and fulfill_order(): codes, blind bags, fund
     payments.py        MockPaymentProvider, and the notes for adding Stripe test mode
     qr.py              QR code PNGs (as data: URIs) via the `qrcode` library
-    voting.py          the open round, time left before it closes, live results
+    voting.py          open round, time left, results, casting votes, closing rounds
+    rate_limit.py      locks out an IP after too many wrong codes
     catalog.py         featured products, lowest price, product photo paths
   routes/              one Flask blueprint per site section
     main.py            home page
     car.py             Revival Car page (profile, totals, installs, build log)
     shop.py            product list/detail, SVG placeholder photos, cart, checkout, confirmation
+    vote.py            ballot (code + part/tier), results page, past rounds
     errors.py          friendly 404 / 413 / 500 pages
   templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
   static/css/style.css the whole look: mobile-first, dark garage theme, no framework
@@ -154,6 +156,20 @@ tests/                 pytest smoke tests
 - **Order confirmation pages are private.** They show the voting codes, so only
   the browser that placed the order can open them (remembered in its session).
   Each code also gets a QR image that links to the vote page.
+- **Voting:**
+  - The ballot is "part + tier together": one choice per code per round.
+  - The server checks that the round is open, the choice belongs to that round
+    (no tampering), the code exists, and the code hasn't voted in this round.
+    The database's unique constraint is the final guard against double votes.
+  - A QR code links to `/vote/?code=...`, which fills in the code box.
+- **Closing a round:**
+  - A round closes itself the first time any page is viewed after its close
+    time ("close on read", since there is no scheduler). The admin will also be
+    able to close one by hand in stage 7.
+  - The winner is the tier with the most votes; ties go to the cheaper tier.
+  - The winner becomes the funding goal straight away if nothing is being
+    funded. Otherwise it is **queued** ("Up next" on the progress card) and
+    becomes active when the current part is installed.
 - **Rate limiting** records wrong code guesses per IP in the database, so it
   works across several server processes.
 

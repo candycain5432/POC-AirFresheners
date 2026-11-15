@@ -30,6 +30,9 @@
       <span><strong>{{ fund.toward_goal | money(false) }}</strong> raised of {{ fund.goal.goal_cents | money(false) }}</span>
       <span>{{ fund.percent }}%</span>
     </p>
+    {% if fund.next_goal %}
+      <p class="progress-next">Up next: <strong>{{ fund.next_goal.part_name }}</strong> ({{ fund.next_goal.tier | tier_label | lower }})</p>
+    {% endif %}
   {% else %}
     <div class="tag-row"><span class="eyebrow tag-accent">Now funding</span></div>
     <h{{ heading_level }} id="progress-heading" class="progress-part">Next part: you decide</h{{ heading_level }}>

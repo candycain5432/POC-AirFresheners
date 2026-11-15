@@ -694,3 +694,81 @@ input:focus, select:focus, textarea:focus { border-color: var(--ink); outline: n
 .js .compare-hint-js { display: block; }
 .js .compare-hint-nojs { display: none; }
 .gallery-title { margin-top: 3rem; }
+
+/* ---------- 18. Voting pages (stage 4) ---------- */
+.vote-band-quiet .vote-inner { padding-bottom: 2.25rem; }
+.vote-band-quiet h2 { font-size: clamp(1.8rem, 6vw, 2.4rem); }
+
+.error-summary {
+  border: 1.5px solid var(--danger); border-left-width: 6px; border-radius: var(--radius-small);
+  background: var(--surface); padding: .9rem 1.1rem; margin-bottom: 1.5rem;
+}
+.error-summary ul { margin: .35rem 0 0; padding-left: 1.2rem; }
+
+.ballot { display: grid; gap: 2rem; margin-bottom: 1rem; }
+.ballot-step { border: 0; margin: 0; padding: 0; min-width: 0; }
+.ballot-step legend, .ballot-legend {
+  display: flex; align-items: center; gap: .7rem; padding: 0; margin-bottom: 1rem;
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem, 6vw, 2.1rem); line-height: 1.1;
+}
+.ballot-step-num {
+  display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--ink); color: var(--cream); font-size: 1.25rem;
+}
+.ballot-option { padding: 1.25rem 0; border-top: 1px solid var(--line); }
+.ballot-option-title { font-size: 1.6rem; margin-bottom: .2rem; }
+.ballot-option .muted { margin-bottom: .9rem; }
+
+/* Each choice is a big tappable card wrapping a real radio button. */
+.tier-cards { display: grid; gap: .6rem; }
+@media (min-width: 720px) { .tier-cards { grid-template-columns: repeat(3, 1fr); gap: .9rem; } }
+.tier-card {
+  position: relative; display: flex; align-items: flex-start; gap: .8rem; margin: 0; cursor: pointer;
+  min-height: 64px; padding: 1rem; font-weight: 400;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius);
+  transition: border-color .15s, box-shadow .15s;
+}
+.tier-card:hover { border-color: var(--ink); }
+.tier-card input { width: 22px; height: 22px; margin: .1rem 0 0; flex: none; accent-color: var(--accent); }
+.tier-card:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 42, 31, .15); }
+.tier-card:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.tier-card-body { display: grid; gap: .3rem; justify-items: start; }
+.tier-card-goal { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1; }
+.tier-card-desc { color: var(--ink-soft); font-size: .98rem; }
+
+.code-input {
+  font-family: var(--font-mono); font-size: 1.35rem !important; letter-spacing: .12em; text-transform: uppercase;
+  max-width: 22rem; min-height: 56px !important;
+}
+.code-input::placeholder { color: #a39c93; letter-spacing: .12em; }
+@media (max-width: 599px) { .btn-block-mobile { display: flex; width: 100%; } }
+.ballot .btn-large { justify-self: start; }
+
+/* "Your vote" marker on the results */
+.mine-flag {
+  font-family: var(--font-mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .12em;
+  background: var(--ink); color: var(--cream); padding: .2rem .45rem; border-radius: 4px;
+}
+.result-tiers li.is-mine { background: var(--surface); outline: 1.5px solid var(--ink); outline-offset: 6px; border-radius: 2px; }
+
+/* Winner banner on a closed round */
+.winner-banner { background: var(--ink); color: var(--cream); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.75rem; }
+.winner-banner .checker-strip { height: 12px; background-size: 12px 12px; background-color: var(--cream); }
+.winner-body { padding: 1.25rem 1.4rem 1.4rem; }
+.winner-body .eyebrow { color: var(--cream); }
+.winner-body h2 { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; color: var(--cream); margin-bottom: .4rem; }
+.winner-body .part-tag { color: var(--cream); }
+.winner-body p { margin: 0; color: var(--muted-on-dark); }
+.winner-body a { color: var(--accent-on-dark); }
+
+/* Past rounds list */
+.past-rounds { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
+.past-round {
+  display: grid; gap: .3rem; padding: 1.1rem 1.2rem; text-decoration: none; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.past-round:hover { border-color: var(--ink); color: var(--ink); }
+.past-round-title { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; line-height: 1.1; }
+.past-round-winner { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; }
+.progress-next { margin: .8rem 0 0; padding-top: .8rem; border-top: 1px dashed var(--line); font-size: .95rem; color: var(--muted); }
+.progress-next strong { color: var(--ink); font-weight: 600; }

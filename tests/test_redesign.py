@@ -50,11 +50,13 @@ def test_countdown_uses_close_time_from_database(client, seeded):
     assert f'data-closes-at="{rnd.closes_at.isoformat()}Z"' in html
     assert re.search(r'<p class="countdown-closed"\s+hidden>', html)
 
+    # Once the close time passes, the round closes on the next page view and
+    # the home page shows the "Voting closed" band with the winner.
     rnd.closes_at = utcnow() - timedelta(minutes=1)
     db.session.commit()
     html = client.get("/").get_data(as_text=True)
-    assert 'class="countdown is-closed"' in html
-    assert '<p class="countdown-closed" >Voting closed</p>' in html
+    assert rnd.status == "closed"
+    assert "Voting closed" in html and "See the final results" in html
 
 
 def test_time_left_helpers(app):

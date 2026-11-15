@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% from "partials/progress.html" import progress_bar %}
 {% from "partials/video.html" import install_video %}
+{% from "partials/countdown.html" import countdown_box %}
+{% from "partials/results.html" import results_grid %}
 {% block title %}Handmade car fresheners{% endblock %}
 
 {% block content %}
@@ -52,57 +54,31 @@
         {% if open_round.description %}<p class="lead">{{ open_round.description }}</p>{% endif %}
       </div>
 
-      {# Countdown. The close time comes from the database (vote_round.closes_at, UTC).
-         The numbers below are correct when the page loads; site.js keeps them ticking. #}
-      {% if open_round.closes_at %}
-        <div class="countdown {{ 'is-closed' if seconds_left == 0 }}" role="timer"
-             data-closes-at="{{ open_round.closes_at.isoformat() }}Z">
-          <p class="countdown-label">Voting closes in</p>
-          <div class="countdown-units">
-            {% for unit, text in [('days', 'Days'), ('hours', 'Hrs'), ('minutes', 'Min'), ('seconds', 'Sec')] %}
-              <span class="cd-unit">
-                <span class="cd-num" data-unit="{{ unit }}">{{ '%02d' % countdown[unit] }}</span>
-                <span class="cd-label">{{ text }}</span>
-              </span>
-            {% endfor %}
-          </div>
-          <p class="countdown-closed" {% if seconds_left != 0 %}hidden{% endif %}>Voting closed</p>
-          <p class="countdown-when">Closes <time datetime="{{ open_round.closes_at.isoformat() }}Z">{{ open_round.closes_at | nice_datetime }}</time></p>
-        </div>
-      {% endif %}
+      {# Countdown: close time comes from the database (vote_round.closes_at). #}
+      {{ countdown_box(open_round, seconds_left, countdown) }}
     </div>
 
-    {# Live results: every part, every tier, its funding goal and its share of the votes. #}
-    <div class="results">
-      {% for row in results.options %}
-        <article class="result-option">
-          <header class="result-head">
-            <h3>{{ row.option.name }}</h3>
-            <span class="result-pct">{{ row.percent }}%</span>
-          </header>
-          <ul class="result-tiers">
-            {% for t in row.tiers %}
-              {% set leading = t.tier.id == results.leading_tier_id %}
-              <li>
-                <div class="tier-line">
-                  <span class="part-tag">{{ t.tier.level_label }}</span>
-                  <span class="tier-goal">{{ t.tier.goal_cents | money(false) }} goal</span>
-                  {% if leading %}<span class="leading-flag">Leading</span>{% endif %}
-                  <span class="tier-pct">{{ t.percent }}%</span>
-                </div>
-                <progress class="bar {{ 'is-leading' if leading }}" max="100" value="{{ t.percent }}"
-                          aria-label="{{ row.option.name }}, {{ t.tier.level_label }}: {{ t.percent }}% of votes">{{ t.percent }}%</progress>
-              </li>
-            {% endfor %}
-          </ul>
-        </article>
-      {% endfor %}
-    </div>
+    {{ results_grid(results) }}
 
     <div class="vote-cta">
       <a class="btn btn-large" href="{{ url_for('vote.index') }}">Cast your vote</a>
       <p>{{ results.total }} vote{{ 's' if results.total != 1 }} so far · one vote per freshener code</p>
     </div>
+  </div>
+</section>
+{% elif last_closed %}
+{# No round open: a quieter band with the last result. #}
+<section class="vote-band vote-band-quiet" aria-labelledby="vote-heading">
+  <div class="checker-strip" aria-hidden="true"></div>
+  <div class="wrap vote-inner">
+    <div class="tag-row"><span class="eyebrow">Voting closed</span></div>
+    <h2 id="vote-heading">{{ last_closed.title }}</h2>
+    {% if last_closed.winning_tier %}
+      <p class="lead">Winner: <strong>{{ last_closed.winning_tier.option.name }}</strong>,
+        {{ last_closed.winning_tier.level_label | lower }} ({{ last_closed.winning_tier.goal_cents | money(false) }}).
+        The next round opens after the next install.</p>
+    {% endif %}
+    <a class="text-link" href="{{ url_for('vote.results', round_id=last_closed.id) }}">See the final results</a>
   </div>
 </section>
 {% endif %}
