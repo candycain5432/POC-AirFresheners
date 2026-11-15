@@ -1,5 +1,5 @@
 """
-Extra command-line commands, run with `flask --app app <command>`.
+Extra command-line commands, run with `python -m flask --app app <command>`.
 
     python -m flask --app app hash-password   -> prints an ADMIN_PASSWORD_HASH value
 """
