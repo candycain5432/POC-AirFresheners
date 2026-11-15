@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    # Settings (SECRET_KEY, ADMIN_PASSWORD_HASH...) come from .env.
+    # Copy .env.example to .env first.
+    env_file: .env
+    volumes:
+      # The SQLite database and uploaded photos live in a named volume,
+      # so they survive container rebuilds.
+      - rr_data:/data
+    restart: unless-stopped
+
+volumes:
+  rr_data:

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rust &amp; Revival – stage 1</title></head>
+<body style="background:#151311;color:#eee;font-family:system-ui;padding:16px">
+  <h1>Rust &amp; Revival – database check</h1>
+  {% if car %}<p>Revival Car: <strong>{{ car.nickname }}</strong> – {{ car.description }}</p>{% endif %}
+  <ul>{% for label, n in counts.items() %}<li>{{ label }}: {{ n }}</li>{% endfor %}</ul>
+  <p><small>Proof of concept: no real purchases are processed.</small></p>
+</body>
+</html>
