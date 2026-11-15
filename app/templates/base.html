@@ -9,13 +9,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Salvage &amp; Scent{% endblock %} · Salvage &amp; Scent</title>
   <meta name="description" content="{% block description %}Handmade car air fresheners. Every sale helps bring a dead car back to life.{% endblock %}">
-  <meta name="theme-color" content="#f4f1ea">
+  <meta name="theme-color" content="#0f0e0d">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
   <meta property="og:site_name" content="Salvage &amp; Scent">
   <meta property="og:title" content="{{ self.title() }} · Salvage &amp; Scent">
   <meta property="og:description" content="{{ self.description() }}">
-  {# Preload the two fonts every page uses, so text appears in the right font sooner. #}
+  {# Preload the fonts every page uses, so text appears in the right font sooner. #}
   <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-condensed-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/big-shoulders-display-latin-900-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {# Not deferred: it must add the "js" class before the page draws. Its other work waits for DOMContentLoaded. #}
   <script src="{{ url_for('static', filename='js/site.js') }}"></script>
@@ -61,6 +62,19 @@
     </div>
   </header>
 
+  {# Scrolling ticker: live numbers from the fund and the vote (template_helpers.ticker_items).
+     The list is printed twice so the loop is seamless; the copy is hidden from screen readers. #}
+  {% set ticker = ticker_items() %}
+  <div class="ticker" role="marquee" aria-label="Latest from the garage">
+    <div class="ticker-track">
+      {% for copy in range(2) %}
+        <ul class="ticker-list" {% if copy %}aria-hidden="true"{% endif %}>
+          {% for line in ticker %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+      {% endfor %}
+    </div>
+  </div>
+
   {# One-time messages (e.g. "Thanks for voting!") set with flash() in a route. #}
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -78,10 +92,24 @@
 
   <footer class="site-footer">
     <div class="checker-strip" aria-hidden="true"></div>
-    <div class="wrap footer-row">
-      <p class="poc-note">Proof of concept: no real purchases are processed.</p>
-      <p class="muted">Handmade aroma-bead fresheners. Every sale funds the Revival Car.</p>
+    <div class="wrap footer-grid">
+      <div class="footer-about">
+        <p class="poc-note">Proof of concept: no real purchases are processed.</p>
+        <p class="muted">Handmade aroma-bead fresheners. Every sale funds the Revival Car.</p>
+        <p class="footer-scrawl" aria-hidden="true">Smells like a hard launch.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <ul>
+          {% for endpoint, label in nav %}<li><a href="{{ url_for(endpoint) }}">{{ label }}</a></li>{% endfor %}
+          <li><a href="{{ url_for('shop.cart') }}">Cart</a></li>
+        </ul>
+      </nav>
+    </div>
+    {# The giant wordmark: decoration only, the brand name is in the header link too. #}
+    <p class="footer-wordmark" aria-hidden="true">Salvage<span class="amp">&amp;</span>Scent</p>
+    <div class="wrap footer-legal">
       <p class="muted">© {{ current_year }} Salvage &amp; Scent</p>
+      <p class="muted">Poured, sold and wrenched on in one garage.</p>
     </div>
   </footer>
 </body>

@@ -18,12 +18,29 @@
         Buy a freshener, vote on the next part, and watch it go in.
       </p>
       <div class="hero-actions">
-        <a class="btn" href="{{ url_for('shop.index') }}">Shop fresheners</a>
-        <a class="btn btn-ghost" href="{{ url_for('vote.index') }}">Vote on the next part</a>
+        <a class="btn btn-large" href="{{ url_for('shop.index') }}">Shop fresheners</a>
+        <a class="btn btn-large btn-ghost" href="{{ url_for('vote.index') }}">Vote on the next part</a>
       </div>
     </div>
 
     <div class="hero-media">
+      {# A hanging freshener (our own hex-bolt shape, no one else's) swinging from the mirror.
+         Pure decoration, drawn in SVG; the swing is CSS and stops for reduced motion. #}
+      <div class="hanging-freshener" aria-hidden="true">
+        <svg viewBox="0 0 120 210" focusable="false">
+          <defs>
+            <pattern id="beads" width="9" height="9" patternUnits="userSpaceOnUse">
+              <circle cx="4.5" cy="4.5" r="2.4" class="bead" />
+            </pattern>
+          </defs>
+          <line class="hf-string" x1="60" y1="0" x2="60" y2="74" />
+          <polygon class="hf-tag" points="60,62 112,92 112,152 60,182 8,152 8,92" />
+          <polygon class="hf-beads" points="60,62 112,92 112,152 60,182 8,152 8,92" />
+          <circle class="hf-hole" cx="60" cy="76" r="4" />
+          <text class="hf-text" x="60" y="134">S&amp;S</text>
+          <text class="hf-sub" x="60" y="152">Burnt Clutch</text>
+        </svg>
+      </div>
       <figure class="hero-photo">
         {#
           REAL PHOTO GOES HERE: save your photo of Lazarus as
@@ -35,7 +52,9 @@
         <img src="{{ url_for('static', filename='img/lazarus-hero.jpg') }}"
              alt="{{ car.nickname if car else 'The Revival Car' }}, the project hatchback, in the garage"
              width="1600" height="1280" fetchpriority="high">
+        <figcaption class="hero-plate">Project car 001{% if car %} · {{ car.nickname }}{% endif %}</figcaption>
       </figure>
+      {% if car %}<p class="hero-scrawl" aria-hidden="true">meet {{ car.nickname }}. still breathing.</p>{% endif %}
       <div class="hero-funding">
         {{ progress_bar(fund) }}
       </div>
@@ -109,7 +128,7 @@
 {% endif %}
 
 {# ================= How it works (dark band) ================= #}
-<section class="band-dark">
+<section class="band-hazard">
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">How it works</p>

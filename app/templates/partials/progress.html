@@ -1,9 +1,37 @@
 {#
-  Revival Car progress card. Usage:
+  Revival Car progress card: a tachometer dial plus the plain bar. Usage:
     {% from "partials/progress.html" import progress_bar %}
     {{ progress_bar(fund) }}
   `fund` comes from services/fund.py:fund_summary().
+
+  The dial is SVG drawn from attributes only (no inline styles, so the CSP is
+  happy). pathLength="100" lets the red arc's length simply be the percentage.
+  The needle sweeps up on load with <animateTransform>; site.js removes that
+  animation for visitors who prefer reduced motion.
 #}
+{% macro tach(percent) %}
+  {% set angle = gauge_angle(percent) %}
+  <svg class="tach" viewBox="0 0 200 172" aria-hidden="true" focusable="false">
+    <path class="tach-track" d="M43.4 156.6 A80 80 0 1 1 156.6 156.6" pathLength="100" />
+    <path class="tach-redline" d="M43.4 156.6 A80 80 0 1 1 156.6 156.6" pathLength="100" stroke-dasharray="12 100" stroke-dashoffset="-88" />
+    <path class="tach-value" d="M43.4 156.6 A80 80 0 1 1 156.6 156.6" pathLength="100" stroke-dasharray="{{ percent }} 100" />
+    {% for t in gauge_ticks() %}
+      <line class="tach-tick" x1="100" y1="34" x2="100" y2="{{ 44 if t.label % 5 == 0 else 40 }}" transform="rotate({{ t.angle }} 100 100)" />
+      <text class="tach-num" x="{{ t.x }}" y="{{ t.y }}">{{ t.label }}</text>
+    {% endfor %}
+    <g transform="translate(100 100)">
+      <g class="tach-needle" transform="rotate({{ angle }})">
+        <animateTransform attributeName="transform" type="rotate" from="-135" to="{{ angle }}"
+                          dur="1.8s" calcMode="spline" keyTimes="0;1" keySplines=".2 .9 .25 1" fill="freeze" />
+        <path d="M-3 12 L0 -74 L3 12 Z" />
+      </g>
+      <circle class="tach-hub" r="9" />
+    </g>
+    <text class="tach-readout" x="100" y="150">{{ percent }}<tspan class="tach-pct">%</tspan></text>
+    <text class="tach-unit" x="100" y="166">funded</text>
+  </svg>
+{% endmacro %}
+
 {% macro progress_bar(fund, heading_level=2) %}
 <section class="progress-card" aria-labelledby="progress-heading">
   {% if fund.goal %}
@@ -12,13 +40,16 @@
       <span class="part-tag">{{ fund.goal.tier | tier_label }}</span>
     </div>
     <h{{ heading_level }} id="progress-heading" class="progress-part">{{ fund.goal.part_name }}</h{{ heading_level }}>
-    <p class="progress-remaining">
-      {% if fund.funded %}
-        <strong>Funded!</strong> Install video coming soon.
-      {% else %}
-        <strong>{{ fund.remaining | money(false) }} to go</strong> for the new {{ fund.goal.part_name | lower }}
-      {% endif %}
-    </p>
+    <div class="progress-dial">
+      {{ tach(fund.percent) }}
+      <p class="progress-remaining">
+        {% if fund.funded %}
+          <strong>Funded!</strong> Install video coming soon.
+        {% else %}
+          <strong>{{ fund.remaining | money(false) }} to go</strong> for the new {{ fund.goal.part_name | lower }}
+        {% endif %}
+      </p>
+    </div>
     {# A native <progress> element: screen readers announce it correctly. #}
     <div class="gauge-track">
       <progress class="gauge" max="{{ fund.goal.goal_cents }}" value="{{ fund.toward_goal }}"

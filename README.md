@@ -201,10 +201,13 @@ app/
                        codes, rounds, installs, meets, garage, fund) + forms.py
     errors.py          friendly 404 / 413 / 500 pages
   templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
-  static/css/style.css the whole look: mobile-first, dark garage theme, no framework
-  static/fonts/        Barlow, Barlow Condensed, IBM Plex Mono (self-hosted, SIL Open Font License)
-  static/img/          placeholder photos (hero, before/now, products) + noise.svg texture
-  static/js/site.js    mobile menu + click-to-load videos (pages work without it)
+  static/css/style.css the whole look: "night shift in the garage", mobile-first, no framework
+  static/fonts/        Big Shoulders Display, Barlow, Barlow Condensed, IBM Plex Mono (SIL OFL)
+                       and Permanent Marker (Apache 2.0), all self-hosted
+  static/img/          placeholder photos (hero, before/now, products), noise/pegboard/scribble
+                       textures, favicon
+  static/js/site.js    mobile menu, click-to-load videos, countdown, scroll reveal
+                       (pages work without it)
 seed.py                sample data (WIPES the database)
 tools/make_placeholder_art.py   redraws the placeholder images in app/static/img/
 seed_images.py         draws placeholder photos with Pillow
@@ -228,6 +231,11 @@ tests/                 pytest smoke tests
 - **Install videos load only when tapped.** The page shows a play button, and
   YouTube (privacy-enhanced domain) or TikTok is contacted only after a tap.
   Shorts and TikToks are shown in a vertical frame.
+- **The look** is a dark "night garage": hazard yellow and racing red, a live
+  ticker under the header, a tachometer for the funding goal (SVG drawn from
+  attributes, so the strict CSP still holds), products hung like blister packs
+  on a pegboard, codes shown as license plates, and receipts with torn edges.
+  Every animation stops for visitors who prefer reduced motion.
 - **Content-Security-Policy** allows scripts and styles from this site only, and
   frames only from YouTube/TikTok. There is no inline JavaScript anywhere.
 - **Checkout runs in two steps**, so a real payment provider can slot in later:

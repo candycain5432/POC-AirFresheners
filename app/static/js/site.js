@@ -8,6 +8,8 @@
   5. Vote countdown: ticks every second until the round's close time.
   6. Before / Now comparison slider on the Revival Car page.
   7. "Are you sure?" for forms marked data-confirm (e.g. deleting a Garage car).
+  8. Reduced motion: stops the tachometer needle sweep.
+  9. Scroll reveal: cards and headings slide up as they come into view.
 */
 document.documentElement.classList.add("js");
 
@@ -104,4 +106,35 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!window.confirm(form.dataset.confirm)) event.preventDefault();
     });
   });
+
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ----- 8. Reduced motion: no needle sweep -----
+  // Removing the SVG animation leaves the needle at its final angle.
+  if (reduceMotion) {
+    document.querySelectorAll(".tach animateTransform").forEach(function (anim) { anim.remove(); });
+  }
+
+  // ----- 9. Scroll reveal -----
+  // Only runs with JS and full motion, so content is never hidden otherwise.
+  // Items in the same row get a small stagger via the --reveal-delay variable.
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    var targets = document.querySelectorAll(
+      ".section-head, .product-card, .mini-card, .steps li, .result-option, .feature, .feature-car, " +
+      ".install-card, .meet-card, .garage-card, .code-card, .reveal-list li, .past-round, .timeline-item"
+    );
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    targets.forEach(function (el) {
+      var siblings = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
+      el.style.setProperty("--reveal-delay", Math.min(siblings, 6) * 70 + "ms");
+      el.classList.add("will-reveal");
+      observer.observe(el);
+    });
+  }
 });
