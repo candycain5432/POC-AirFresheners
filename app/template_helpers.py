@@ -35,6 +35,13 @@ def nice_datetime(value):
     return value.strftime("%a, %b %-d at %H:%M UTC")
 
 
+def local_datetime(value):
+    """Naive UTC datetime from the database -> "Nov 20, 2026, 8:00 PM" in SHOP_TIMEZONE."""
+    from .services.clock import utc_to_local
+    local = utc_to_local(value)
+    return local.strftime("%b %-d, %Y, %-I:%M %p") if local else ""
+
+
 def register_template_helpers(app):
     app.jinja_env.filters["money"] = money
     app.jinja_env.filters["nice_date"] = nice_date
@@ -43,6 +50,7 @@ def register_template_helpers(app):
     app.jinja_env.globals["embed_info"] = embed_info
     app.jinja_env.globals["product_image_url"] = product_image_url
     app.jinja_env.filters["nice_datetime"] = nice_datetime
+    app.jinja_env.filters["local_datetime"] = local_datetime
 
     @app.context_processor
     def inject_globals():

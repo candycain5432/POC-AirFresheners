@@ -76,3 +76,15 @@ def fund_summary():
         summary["percent"] = round(100 * toward / goal.goal_cents) if goal.goal_cents else 100
         summary["funded"] = summary["remaining"] == 0
     return summary
+
+
+def add_manual_entry(amount_cents, note):
+    """Admin adjustment to the fund: positive (cash sales, donations) or negative (corrections)."""
+    entry = FundEntry(amount_cents=amount_cents, source="manual", note=note)
+    db.session.add(entry)
+    db.session.commit()
+    return entry
+
+
+def recent_entries(limit=50):
+    return FundEntry.query.order_by(FundEntry.created_at.desc(), FundEntry.id.desc()).limit(limit).all()

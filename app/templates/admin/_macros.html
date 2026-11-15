@@ -1,0 +1,40 @@
+{#
+  Form helpers for admin pages.
+    {% from "admin/_macros.html" import field, errors_box %}
+    {{ field(form, "title", "Title", hint="Shown on the vote page") }}
+  `form` is a routes/admin/forms.py FormReader (it holds values and errors).
+#}
+{% macro errors_box(form) %}
+  {% if form.errors %}
+    <div class="error-summary" role="alert">
+      <strong>Please fix:</strong>
+      <ul>{% for message in form.errors.values() %}<li>{{ message }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro field(form, name, label, type="text", hint="", required=True, placeholder="", maxlength=None, step=None, min=None) %}
+  <div class="field">
+    <label for="f-{{ name }}">{{ label }}{% if not required %} <span class="muted">(optional)</span>{% endif %}</label>
+    {% if type == "textarea" %}
+      <textarea id="f-{{ name }}" name="{{ name }}" rows="3" {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+                placeholder="{{ placeholder }}" {% if form.errors[name] %}aria-invalid="true"{% endif %}>{{ form.values.get(name, '') }}</textarea>
+    {% else %}
+      <input id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ form.values.get(name, '') }}"
+             placeholder="{{ placeholder }}" {% if required %}required{% endif %}
+             {% if maxlength %}maxlength="{{ maxlength }}"{% endif %} {% if step %}step="{{ step }}"{% endif %}
+             {% if min is not none %}min="{{ min }}"{% endif %} {% if form.errors[name] %}aria-invalid="true"{% endif %}>
+    {% endif %}
+    {% if hint %}<p class="field-hint">{{ hint }}</p>{% endif %}
+    {% if form.errors[name] %}<p class="error-text">{{ form.errors[name] }}</p>{% endif %}
+  </div>
+{% endmacro %}
+
+{# A one-button form for actions like "Hide" or "Close round". #}
+{% macro action_button(url, label, fields={}, style="btn-ghost", confirm=None) %}
+  <form method="post" action="{{ url }}" class="inline-form" {% if confirm %}data-confirm="{{ confirm }}"{% endif %}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for key, value in fields.items() %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+    <button class="btn btn-small {{ style }}" type="submit">{{ label }}</button>
+  </form>
+{% endmacro %}

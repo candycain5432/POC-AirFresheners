@@ -1,0 +1,31 @@
+{#
+  Layout for every admin page (except login): the site header and footer,
+  plus an admin bar with the section tabs and a log-out button.
+#}
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<div class="admin-bar no-print">
+  <div class="wrap admin-bar-row">
+    <span class="eyebrow tag-accent">Admin</span>
+    {# (page, label, prefix): a tab is highlighted for every admin page whose name starts with its prefix. #}
+    {% set tabs = [
+      ('admin.dashboard', 'Dashboard', 'admin.dashboard'), ('admin.codes', 'Codes', 'admin.code'),
+      ('admin.rounds', 'Vote rounds', 'admin.round'), ('admin.installs', 'Installs', 'admin.install'),
+      ('admin.meets', 'Meets', 'admin.meet'), ('admin.garage', 'Garage', 'admin.garage'), ('admin.fund', 'Fund', 'admin.fund'),
+    ] %}
+    <nav class="admin-tabs" aria-label="Admin sections">
+      {% for endpoint, label, prefix in tabs %}
+        <a href="{{ url_for(endpoint) }}" {% if request.endpoint.startswith(prefix) %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <form method="post" action="{{ url_for('admin.logout') }}" class="admin-logout">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-ghost btn-small" type="submit">Log out</button>
+    </form>
+  </div>
+</div>
+<div class="wrap admin-page">
+  {% block admin %}{% endblock %}
+</div>
+{% endblock %}

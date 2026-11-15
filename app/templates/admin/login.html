@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Admin log in{% endblock %}
+{% block content %}
+<section class="wrap page-section narrow admin-login">
+  <div class="section-head">
+    <p class="eyebrow tag-accent">Admin</p>
+    <h1 class="page-title">Log in</h1>
+  </div>
+  {% if not configured %}
+    <p class="notice"><strong>Admin is locked.</strong> Set <code>ADMIN_PASSWORD_HASH</code> in your <code>.env</code>
+      (create one with <code>python -m flask --app app hash-password</code>), then restart the app.</p>
+  {% endif %}
+  {% if error %}<div class="error-summary" role="alert"><strong>{{ error }}</strong></div>{% endif %}
+  <form method="post" class="admin-login-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+    </div>
+    <button class="btn btn-large btn-block-mobile" type="submit">Log in</button>
+  </form>
+</section>
+{% endblock %}

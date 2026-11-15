@@ -1,0 +1,47 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import field, errors_box %}
+{% block title %}Admin: installs{% endblock %}
+{% block admin %}
+<h1 class="page-title">Installs</h1>
+<p class="lead">Log a part once it's on the car. Its cost comes out of the fund, and the install appears on the Revival Car page.</p>
+<div class="admin-grid">
+  <section class="admin-card">
+    <h2 class="admin-h2">Log an install</h2>
+    {{ errors_box(form) }}
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ field(form, "part_name", "Part", maxlength=120) }}
+      <div class="field">
+        <label for="f-tier">Tier</label>
+        <select id="f-tier" name="tier">{% for level, label in tier_levels %}<option value="{{ level }}" {% if form.values.get('tier') == level %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      </div>
+      {{ field(form, "cost", "What it cost ($)", hint="The real amount spent. It's subtracted from the fund.") }}
+      {{ field(form, "installed_on", "Install date", type="date") }}
+      {{ field(form, "video_url", "Video link", type="url", required=False, maxlength=300,
+               placeholder="https://www.youtube.com/watch?v=...", hint="YouTube or TikTok. You can add it later.") }}
+      {{ field(form, "notes", "Notes", type="textarea", required=False, maxlength=2000) }}
+      <div class="field"><label for="f-before">Before photos <span class="muted">(optional)</span></label>
+        <input id="f-before" name="before_photos" type="file" accept="image/jpeg,image/png,image/webp" multiple class="file-input"></div>
+      <div class="field"><label for="f-after">After photos <span class="muted">(optional)</span></label>
+        <input id="f-after" name="after_photos" type="file" accept="image/jpeg,image/png,image/webp" multiple class="file-input">
+        <p class="field-hint">JPG, PNG or WebP. 5 MB in total per save. Location data is stripped.</p></div>
+      {% if goal %}
+        <label class="check-row"><input type="checkbox" name="completes_goal" value="1" {% if form.values.get('completes_goal') %}checked{% endif %}>
+          This completes the current goal: <strong>{{ goal.part_name }}</strong> ({{ goal.tier | tier_label }})</label>
+        {% if fund.next_goal %}<p class="field-hint">Up next will then be {{ fund.next_goal.part_name }}.</p>{% endif %}
+      {% endif %}
+      <button class="btn" type="submit">Log install</button>
+    </form>
+  </section>
+  <section>
+    <h2 class="admin-h2">Logged installs</h2>
+    <ul class="admin-list">
+      {% for i in installs %}
+        <li><a href="{{ url_for('admin.install_edit', install_id=i.id) }}"><strong>{{ i.part_name }}</strong></a>
+            <span class="muted">{{ i.tier | tier_label }} · {{ i.cost_cents | money(false) }} · {{ i.installed_on | nice_date }}</span>
+            {% if not i.video_url %}<span class="status-pill status-sold-out">No video</span>{% endif %}</li>
+      {% else %}<li class="muted">Nothing installed yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

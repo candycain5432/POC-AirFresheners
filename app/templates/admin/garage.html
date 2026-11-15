@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import action_button %}
+{% from "partials/car_photo.html" import car_photo %}
+{% block title %}Admin: Garage{% endblock %}
+{% block admin %}
+<h1 class="page-title">Garage</h1>
+<p class="lead">Hide anything that breaks your house rules (it disappears from the site straight away), and pick the Car of the Month.
+  {% if current %}Current pick: <strong>{{ current.member.car_name }}</strong> ({{ current.month }}).{% endif %}</p>
+<ul class="admin-garage">
+  {% for m in members %}
+    <li class="admin-card {{ 'is-hidden-car' if m.is_hidden }}">
+      <div class="admin-garage-photo">{{ car_photo(m) }}</div>
+      <div>
+        <h3>{{ m.car_name }} {% if m.is_hidden %}<span class="status-pill status-sold-out">Hidden</span>{% endif %}
+          {% if current and current.member_id == m.id %}<span class="status-pill status-on-sale">Car of the Month</span>{% endif %}</h3>
+        <p class="muted">{{ m.owner_name }} · joined {{ m.created_at | local_datetime }}</p>
+        {% if m.description %}<p class="admin-garage-desc">{{ m.description }}</p>{% endif %}
+        <div class="admin-row-actions">
+          {% if m.is_hidden %}{{ action_button(url_for('admin.garage_hide', member_id=m.id), 'Unhide', {'hidden': '0'}) }}
+          {% else %}{{ action_button(url_for('admin.garage_hide', member_id=m.id), 'Hide', {'hidden': '1'}) }}{% endif %}
+          {% if not m.is_hidden %}<a class="btn btn-small btn-ghost" href="{{ url_for('garage.car', member_id=m.id) }}">View</a>{% endif %}
+        </div>
+        {% if not m.is_hidden %}
+          <details class="feature-form">
+            <summary>Make Car of the Month</summary>
+            <form method="post" action="{{ url_for('admin.garage_feature', member_id=m.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="field"><label for="month-{{ m.id }}">Month</label><input id="month-{{ m.id }}" name="month" type="month" value="{{ this_month }}" required></div>
+              <div class="field"><label for="blurb-{{ m.id }}">Blurb</label><input id="blurb-{{ m.id }}" name="blurb" type="text" maxlength="300" placeholder="Why this car?"></div>
+              <button class="btn btn-small" type="submit">Feature it</button>
+            </form>
+          </details>
+        {% endif %}
+      </div>
+    </li>
+  {% else %}<li class="muted">The Garage is empty.</li>{% endfor %}
+</ul>
+{% endblock %}

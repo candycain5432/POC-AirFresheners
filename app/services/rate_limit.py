@@ -38,9 +38,12 @@ def _recent_failures(ip, action):
             .order_by(FailedAttempt.created_at))
 
 
+LIMIT_SETTINGS = {"code": "CODE_ATTEMPT_LIMIT", "admin_login": "ADMIN_LOGIN_ATTEMPT_LIMIT"}
+
+
 def minutes_locked(ip, action="code"):
     """0 if this IP may try again now; otherwise roughly how many minutes to wait."""
-    limit = current_app.config["CODE_ATTEMPT_LIMIT"]
+    limit = current_app.config[LIMIT_SETTINGS[action]]
     failures = _recent_failures(ip, action).all()
     if len(failures) < limit:
         return 0

@@ -307,7 +307,7 @@ def product_photo(name, colour, kind, size=800):
 def make_product_images():
     from seed import MEETS, PRODUCTS, meet_slug
     items = [(slug, name, colour, kind) for slug, name, kind, _d, _p, _u, colour in PRODUCTS]
-    items += [(meet_slug(m[3]), m[3], m[-1], "meet") for m in MEETS]
+    items += [(meet_slug(m[3]), m[3], m[-1], "meet") for m in MEETS if m[-2]]   # only meets sold online
     for slug, name, colour, kind in items:
         save(product_photo(name, colour, kind), os.path.join(PRODUCT_DIR, f"{slug}.jpg"), quality=78)
 

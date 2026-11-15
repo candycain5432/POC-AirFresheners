@@ -1,0 +1,41 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import field, errors_box, action_button %}
+{% block title %}Admin: meets{% endblock %}
+{% block admin %}
+<h1 class="page-title">Meet drops</h1>
+<div class="admin-grid">
+  <section class="admin-card">
+    <h2 class="admin-h2">Add a meet</h2>
+    {{ errors_box(form) }}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ field(form, "meet_name", "Meet name", maxlength=120, placeholder="Spring Thaw Swap Meet") }}
+      {{ field(form, "meet_date", "Date", type="date") }}
+      {{ field(form, "location", "Location", maxlength=160, hint="Shown on the page and used for the Directions link.") }}
+      {{ field(form, "scent_name", "Exclusive scent", maxlength=100) }}
+      {{ field(form, "scent_description", "Scent notes", required=False, maxlength=250) }}
+      {{ field(form, "quantity", "Batch size", type="number", required=False, min=1) }}
+      <label class="check-row"><input type="checkbox" name="sell_online" value="1" {% if form.values.get('sell_online') %}checked{% endif %}> Also sell it online (adds it to the shop)</label>
+      {{ field(form, "price", "Online price ($)", required=False, hint="Only used when selling online.") }}
+      <button class="btn" type="submit">Add meet</button>
+    </form>
+  </section>
+  <section>
+    <h2 class="admin-h2">All meets</h2>
+    <ul class="admin-list">
+      {% for m in meets %}
+        <li>
+          <strong>{{ m.meet_name }}</strong>
+          <span class="status-pill status-{{ statuses[m.id].tone }}">{{ statuses[m.id].label }}</span>
+          <span class="muted">{{ m.meet_date | nice_date }} · {{ m.scent_name }}{% if m.products %} · online{% endif %}</span>
+          <span class="admin-row-actions">
+            {% if m.sold_out %}{{ action_button(url_for('admin.meet_sold_out', meet_id=m.id), 'Back in stock', {'sold_out': '0'}) }}
+            {% else %}{{ action_button(url_for('admin.meet_sold_out', meet_id=m.id), 'Mark sold out', {'sold_out': '1'}) }}{% endif %}
+            {{ action_button(url_for('admin.meet_delete', meet_id=m.id), 'Delete', confirm='Delete ' ~ m.meet_name ~ '?') }}
+          </span>
+        </li>
+      {% else %}<li class="muted">No meets yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import field, errors_box %}
+{% block title %}Admin: vote rounds{% endblock %}
+{% block admin %}
+<h1 class="page-title">Vote rounds</h1>
+<p class="lead">Start a round as a draft, add the parts and their tiers, then open it with a close time.
+  When it closes (on time, or with the Close button), the winner becomes the next funding goal.</p>
+<div class="admin-grid">
+  <section class="admin-card">
+    <h2 class="admin-h2">New draft</h2>
+    {{ errors_box(form) }}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ field(form, "title", "Title", placeholder="Round 8: Interior time", maxlength=120) }}
+      {{ field(form, "description", "Description", type="textarea", required=False, maxlength=1000,
+               hint="One or two sentences shown on the vote page.") }}
+      <button class="btn" type="submit">Create draft</button>
+    </form>
+  </section>
+  <section>
+    <h2 class="admin-h2">All rounds</h2>
+    <ul class="admin-list">
+      {% for r in rounds %}
+        <li>
+          <a href="{{ url_for('admin.round_detail', round_id=r.id) }}"><strong>{{ r.title }}</strong></a>
+          <span class="status-pill status-{{ {'open': 'on-sale', 'draft': 'meet-only', 'closed': 'over'}[r.status] }}">{{ r.status }}</span>
+          <span class="muted">
+            {% if r.status == 'open' %}closes {{ r.closes_at | local_datetime }}
+            {% elif r.status == 'closed' %}{{ r.votes | length }} votes{% if r.winning_tier %} · winner: {{ r.winning_tier.option.name }} ({{ r.winning_tier.level_label }}){% endif %}
+            {% else %}{{ r.options | length }} parts{% endif %}
+          </span>
+        </li>
+      {% else %}<li class="muted">No rounds yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

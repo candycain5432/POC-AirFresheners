@@ -1,0 +1,29 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import field, errors_box %}
+{% block title %}Admin: codes{% endblock %}
+{% block admin %}
+<h1 class="page-title">Freshener codes</h1>
+<p class="lead">Codes for fresheners sold in person (meet tables, local shops). Online orders get their codes automatically.</p>
+
+<div class="admin-grid">
+  <section class="admin-card">
+    <h2 class="admin-h2">Make a batch</h2>
+    {{ errors_box(form) }}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ field(form, "label", "Label", hint="e.g. Frost Fest table stock", maxlength=120) }}
+      {{ field(form, "count", "How many", type="number", hint="Up to " ~ max_batch ~ " per batch.", min=1) }}
+      <button class="btn" type="submit">Generate codes</button>
+    </form>
+  </section>
+  <section>
+    <h2 class="admin-h2">Batches</h2>
+    <ul class="admin-list">
+      {% for b in batches %}
+        <li><a href="{{ url_for('admin.code_batch', batch_id=b.id) }}"><strong>{{ b.label }}</strong></a>
+            <span class="muted">{{ b.codes | length }} codes · {{ b.created_at | local_datetime }}</span></li>
+      {% else %}<li class="muted">No batches yet.</li>{% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

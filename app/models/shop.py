@@ -29,6 +29,7 @@ class Product(db.Model):
     # Featured products appear in the row on the home page.
     is_featured = db.Column(db.Boolean, default=False, nullable=False)
     meet_drop_id = db.Column(db.Integer, db.ForeignKey("meet_drop.id"))  # set for meet exclusives
+    meet = db.relationship("MeetDrop", backref="products")
     position = db.Column(db.Integer, default=0)
 
 

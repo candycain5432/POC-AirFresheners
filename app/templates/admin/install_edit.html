@@ -1,0 +1,36 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import field, errors_box, action_button %}
+{% block title %}Admin: {{ install.part_name }}{% endblock %}
+{% block admin %}
+<p class="breadcrumb"><a href="{{ url_for('admin.installs') }}">Installs</a> / {{ install.part_name }}</p>
+<h1 class="page-title">{{ install.part_name }}</h1>
+<p class="lead">{{ install.tier | tier_label }} · installed {{ install.installed_on | nice_date }}</p>
+<div class="admin-grid">
+  <section class="admin-card">
+    {{ errors_box(form) }}
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ field(form, "video_url", "Video link", type="url", required=False, maxlength=300, hint="YouTube or TikTok.") }}
+      {{ field(form, "cost", "What it cost ($)") }}
+      {{ field(form, "notes", "Notes", type="textarea", required=False, maxlength=2000) }}
+      <div class="field"><label for="f-before">Add before photos</label>
+        <input id="f-before" name="before_photos" type="file" accept="image/jpeg,image/png,image/webp" multiple class="file-input"></div>
+      <div class="field"><label for="f-after">Add after photos</label>
+        <input id="f-after" name="after_photos" type="file" accept="image/jpeg,image/png,image/webp" multiple class="file-input"></div>
+      <button class="btn" type="submit">Save</button>
+    </form>
+  </section>
+  <section>
+    <h2 class="admin-h2">Photos</h2>
+    <div class="admin-photos">
+      {% for photo in install.photos %}
+        <figure>
+          <img src="{{ url_for('uploads.uploaded_file', filename=photo.filename) }}" alt="{{ photo.kind }} photo" width="320" height="240" loading="lazy">
+          <figcaption>{{ photo.kind | capitalize }} {{ action_button(url_for('admin.install_photo_delete', photo_id=photo.id), 'Remove', confirm='Remove this photo?') }}</figcaption>
+        </figure>
+      {% else %}<p class="muted">No photos yet.</p>{% endfor %}
+    </div>
+    <a class="text-link" href="{{ url_for('car.index') }}#install-{{ install.id }}">See it on the Revival Car page</a>
+  </section>
+</div>
+{% endblock %}

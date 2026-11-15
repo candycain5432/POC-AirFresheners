@@ -32,6 +32,7 @@ from app.models import (
 from app.models._common import utcnow
 from app.models.shop import BlindBagResult
 from app.services.codes import create_codes, format_code, new_order_reference
+from app.services.clock import shop_today
 from seed_images import make_placeholder
 
 # A fixed random seed means the sample data looks the same every run
@@ -133,18 +134,23 @@ def seed_installs(upload_dir):
 # Sample catalogue data lives at module level so other scripts (for example
 # tools/make_placeholder_art.py, which draws one photo per product) can reuse it.
 
-# meet name, date, location, exclusive scent, scent notes, quantity made, sold out?, colour
+# Meet dates are "days from the day you run the seed" (negative = in the past),
+# so upcoming meets stay upcoming no matter when you seed.
+# meet name, day offset, location, exclusive scent, scent notes, quantity made,
+# sold out?, sold online too?, colour
 MEETS = [
-    ("Spring Thaw Swap Meet", date(2026, 4, 25), "County Fairgrounds, Lot C", "Thaw Out",
-     "Wet asphalt, cut grass and a hint of two-stroke.", 60, True, "#6f8f5a"),
-    ("Summer Night Cruise", date(2026, 7, 18), "Riverside Diner parking lot", "Neon Nights",
-     "Cherry soda, warm vinyl and late-night fries.", 80, True, "#b0306a"),
-    ("Harvest Hoods Meet", date(2026, 10, 11), "Old Mill car park", "Harvest Hood",
-     "Apple cider, woodsmoke and a warm engine bay.", 100, True, "#a8562a"),
-    ("Frost Fest Cars & Coffee", date(2026, 12, 6), "Hilltop Coffee Roasters", "Cold Start",
-     "Frosted pine, espresso and cold steel.", 120, False, "#4f7f99"),
-    ("New Year Rust Run", date(2027, 1, 3), "Lakeside Industrial Park", "Rust Run",
-     "Leather, clove and a little bit of gasoline (the nice kind).", 120, False, "#8a5a3b"),
+    ("Spring Thaw Swap Meet", -204, "County Fairgrounds, Lot C", "Thaw Out",
+     "Wet asphalt, cut grass and a hint of two-stroke.", 60, True, True, "#6f8f5a"),
+    ("Summer Night Cruise", -120, "Riverside Diner parking lot", "Neon Nights",
+     "Cherry soda, warm vinyl and late-night fries.", 80, True, True, "#b0306a"),
+    ("Harvest Hoods Meet", -35, "Old Mill car park", "Harvest Hood",
+     "Apple cider, woodsmoke and a warm engine bay.", 100, True, True, "#a8562a"),
+    ("Frost Fest Cars & Coffee", 21, "Hilltop Coffee Roasters", "Cold Start",
+     "Frosted pine, espresso and cold steel.", 120, False, True, "#4f7f99"),
+    ("New Year Rust Run", 49, "Lakeside Industrial Park", "Rust Run",
+     "Leather, clove and a little bit of gasoline (the nice kind).", 120, False, True, "#8a5a3b"),
+    ("Valentine's Rooftop Meet", 84, "Downtown parking garage, top deck", "Redline Rose",
+     "Rose, black pepper and hot tyres. Only sold in person at the meet.", 80, False, False, "#9c2a3a"),
 ]
 
 # slug, name, kind, description, price ($), fresheners per unit, colour
@@ -181,8 +187,9 @@ def meet_slug(scent_name):
 
 def seed_meets():
     rows = []
-    for name, when, where, scent, desc, qty, sold_out, _colour in MEETS:
-        m = MeetDrop(meet_name=name, meet_date=when, location=where, scent_name=scent,
+    today = shop_today()      # the shop's local date, same as the meets page uses
+    for name, offset, where, scent, desc, qty, sold_out, _online, _colour in MEETS:
+        m = MeetDrop(meet_name=name, meet_date=today + timedelta(days=offset), location=where, scent_name=scent,
                      scent_description=desc, quantity=qty, sold_out=sold_out)
         db.session.add(m)
         rows.append(m)
@@ -199,8 +206,10 @@ def seed_products(meets):
         db.session.add(p)
         rows[slug] = p
 
-    # One meet-exclusive product per meet drop. Past meets are sold out.
+    # One meet-exclusive product per meet that also sells online. Past meets are sold out.
     for j, (meet, row) in enumerate(zip(meets, MEETS)):
+        if not row[-2]:          # "sold online too?" is False: at the meet only
+            continue
         slug = meet_slug(meet.scent_name)
         p = Product(slug=slug, name=f"{meet.scent_name} (Meet Exclusive)", kind="meet",
                     scent_description=f"{meet.scent_description} Only made for {meet.meet_name}.",
