@@ -39,6 +39,10 @@ class Config:
     # see app/services/payments.py for how to add Stripe test mode.
     PAYMENT_PROVIDER = os.environ.get("PAYMENT_PROVIDER", "mock")
 
+    # The shop's local time zone (IANA name, e.g. "America/Chicago"). Used to
+    # decide which meets are "upcoming" today. Meet dates are local dates.
+    SHOP_TIMEZONE = os.environ.get("SHOP_TIMEZONE", "America/New_York")
+
     # Code-guessing protection: this many wrong codes from one IP within the
     # window locks that IP out of code entry until the window passes.
     CODE_ATTEMPT_LIMIT = int(os.environ.get("CODE_ATTEMPT_LIMIT", "10"))

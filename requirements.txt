@@ -11,3 +11,5 @@ qrcode==8.2
 gunicorn==23.0.0
 # Tests
 pytest==8.4.2
+# Time zone data for SHOP_TIMEZONE (slim Docker images don't ship it)
+tzdata==2025.2

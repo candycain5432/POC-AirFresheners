@@ -34,7 +34,10 @@ def _save(cart):
 
 
 def can_buy(product):
-    return product is not None and product.is_active and not product.sold_out
+    """Active, not sold out, and (for a meet exclusive) its meet isn't marked sold out either."""
+    if product is None or not product.is_active or product.sold_out:
+        return False
+    return not (product.meet and product.meet.sold_out)
 
 
 def add_item(product, qty, note=""):

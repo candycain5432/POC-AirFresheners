@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Meet Drops{% endblock %}
+{% block description %}Where to find Salvage &amp; Scent next, and the exclusive scent made for each meet.{% endblock %}
+
+{# ---------- Small building blocks used by every meet card ---------- #}
+{% macro date_block(d) %}
+  {# Like an entry on a race calendar: month, big day number, weekday. #}
+  <time class="date-block" datetime="{{ d.isoformat() }}">
+    <span class="date-month">{{ d.strftime('%b') }}</span>
+    <span class="date-day">{{ d.day }}</span>
+    <span class="date-weekday">{{ d.strftime('%a') }}</span>
+  </time>
+{% endmacro %}
+
+{% macro status_pill(status) %}
+  <span class="status-pill status-{{ status.tone }}">{{ status.label }}</span>
+{% endmacro %}
+
+{% macro meet_actions(meet, status, upcoming) %}
+  <div class="meet-actions">
+    {% if status.product %}
+      <a class="btn btn-small" href="{{ url_for('shop.product', slug=status.product.slug) }}">Buy {{ meet.scent_name }} · {{ status.product.price_cents | money(false) }}</a>
+    {% endif %}
+    {% if upcoming %}
+      <a class="btn btn-small btn-ghost" href="{{ url_for('meets.calendar', meet_id=meet.id) }}" download>Add to calendar</a>
+      <a class="btn btn-small btn-ghost" href="https://www.google.com/maps/search/?api=1&amp;query={{ meet.location | urlencode }}"
+         target="_blank" rel="noopener noreferrer">Directions ↗</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro meet_card(meet, upcoming) %}
+  {% set status = info[meet.id].status %}
+  <article class="meet-card {{ 'is-past' if not upcoming }}" id="meet-{{ meet.id }}">
+    {{ date_block(meet.meet_date) }}
+    <div class="meet-body">
+      <div class="meet-head">
+        <h3>{{ meet.meet_name }}</h3>
+        {{ status_pill(status) }}
+      </div>
+      <p class="meet-where">{{ meet.location }} · <span class="meet-when">{{ info[meet.id].when }}</span></p>
+      <div class="meet-scent">
+        {% if status.product or meet.products %}
+          {% set p = status.product or meet.products[0] %}
+          <img src="{{ product_image_url(p) }}" alt="" width="64" height="64" loading="lazy">
+        {% endif %}
+        <p><span class="part-tag">Exclusive scent</span> <strong>{{ meet.scent_name }}</strong>
+          <span class="muted">{{ meet.scent_description }}{% if meet.quantity %} Batch of {{ meet.quantity }}.{% endif %}</span></p>
+      </div>
+      {{ meet_actions(meet, status, upcoming) }}
+    </div>
+  </article>
+{% endmacro %}
+
+{% block content %}
+<section class="wrap page-section">
+  <div class="section-head">
+    <p class="eyebrow">Meet drops</p>
+    <h1 class="page-title">Catch us at the next meet</h1>
+    <p class="lead">Every meet gets its own scent, poured in one small batch. When they're gone, they're gone.</p>
+  </div>
+</section>
+
+{# ---------- Next meet: the big one ---------- #}
+{% if next_meet %}
+  {% set status = info[next_meet.id].status %}
+  <section class="band-dark next-meet-band" id="meet-{{ next_meet.id }}" aria-labelledby="next-meet-title">
+    <div class="wrap next-meet">
+      <div class="next-meet-main">
+        <div class="tag-row">
+          <span class="eyebrow tag-accent">Next up</span>
+          {{ status_pill(status) }}
+        </div>
+        <h2 id="next-meet-title">{{ next_meet.meet_name }}</h2>
+        <p class="next-meet-when">
+          <strong>{{ next_meet.meet_date.strftime('%A, %B') }} {{ next_meet.meet_date.day }}</strong>
+          · {{ next_meet.location }}
+        </p>
+        <p class="next-meet-countdown">
+          {% if days_to_next == 0 %}<strong>Today!</strong>
+          {% else %}<strong>{{ days_to_next }}</strong> day{{ 's' if days_to_next != 1 }} to go{% endif %}
+        </p>
+        {{ meet_actions(next_meet, status, True) }}
+      </div>
+      <div class="next-meet-scent">
+        {% if next_meet.products %}
+          <img src="{{ product_image_url(next_meet.products[0]) }}" alt="{{ next_meet.scent_name }} freshener" width="800" height="800">
+        {% endif %}
+        <p class="part-tag">Exclusive scent</p>
+        <h3>{{ next_meet.scent_name }}</h3>
+        <p>{{ next_meet.scent_description }}{% if next_meet.quantity %} Batch of {{ next_meet.quantity }}.{% endif %}</p>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+{# ---------- Later meets ---------- #}
+{% if upcoming %}
+<section class="wrap page-section">
+  <div class="section-head"><h2 class="section-title">Coming up</h2></div>
+  <div class="meet-list">{% for meet in upcoming %}{{ meet_card(meet, True) }}{% endfor %}</div>
+</section>
+{% elif not next_meet %}
+<section class="wrap page-section">
+  <p class="notice">No meets on the calendar right now. Follow us on social to hear about the next one first.</p>
+</section>
+{% endif %}
+
+{# ---------- Past meets ---------- #}
+{% if past %}
+<section class="wrap page-section">
+  <div class="section-head"><h2 class="section-title">Past drops <span class="count">{{ past | length }}</span></h2></div>
+  <div class="meet-list">{% for meet in past %}{{ meet_card(meet, False) }}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}
