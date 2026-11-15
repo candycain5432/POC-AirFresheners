@@ -21,6 +21,9 @@ class VoteRound(db.Model):
     description = db.Column(db.Text, default="")
     status = db.Column(db.String(20), nullable=False, default="draft")  # draft / open / closed
     opened_at = db.Column(db.DateTime)
+    # When voting is scheduled to end (UTC). The home page countdown reads this.
+    closes_at = db.Column(db.DateTime)
+    # When the round was actually closed (UTC).
     closed_at = db.Column(db.DateTime)
     # use_alter: rounds point at a tier and tiers (via options) point at
     # rounds. This tells SQLAlchemy the circular link is intentional.

@@ -26,6 +26,8 @@ class Product(db.Model):
     accent_color = db.Column(db.String(7), default="#c2571a")
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     sold_out = db.Column(db.Boolean, default=False, nullable=False)
+    # Featured products appear in the row on the home page.
+    is_featured = db.Column(db.Boolean, default=False, nullable=False)
     meet_drop_id = db.Column(db.Integer, db.ForeignKey("meet_drop.id"))  # set for meet exclusives
     position = db.Column(db.Integer, default=0)
 
@@ -41,7 +43,7 @@ class BlindBagScent(db.Model):
 class Order(db.Model):
     # "order" is a reserved SQL word; SQLAlchemy quotes it for us automatically.
     id = db.Column(db.Integer, primary_key=True)
-    # Short public reference shown to the customer, e.g. "RR-7KD4QX".
+    # Short public reference shown to the customer, e.g. "SS-7KD4QX".
     reference = db.Column(db.String(20), unique=True, nullable=False)
     customer_name = db.Column(db.String(80), nullable=False)
     customer_email = db.Column(db.String(120), default="")

@@ -67,9 +67,9 @@ def find_code(raw):
 
 
 def new_order_reference():
-    """Short, human-friendly order number like "RR-7KD4QX" (not secret, just unique)."""
+    """Short, human-friendly order number like "SS-7KD4QX" (not secret, just unique)."""
     from ..models import Order
     while True:
-        ref = "RR-" + "".join(secrets.choice(ALPHABET) for _ in range(6))
+        ref = "SS-" + "".join(secrets.choice(ALPHABET) for _ in range(6))
         if not Order.query.filter_by(reference=ref).first():
             return ref

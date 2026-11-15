@@ -1,0 +1,38 @@
+{#
+  Live results: every part, every tier, its funding goal and its share of votes.
+  Usage:
+    {% from "partials/results.html" import results_grid %}
+    {{ results_grid(results, my_tier_id=None, leading_word="Leading") }}
+  `results` comes from services/voting.py:round_results().
+#}
+{% macro results_grid(results, my_tier_id=None, leading_word="Leading") %}
+    {# Live results: every part, every tier, its funding goal and its share of the votes. #}
+    <div class="results">
+      {% for row in results.options %}
+        <article class="result-option">
+          <header class="result-head">
+            <h3>{{ row.option.name }}</h3>
+            <span class="result-pct">{{ row.percent }}%</span>
+          </header>
+          <ul class="result-tiers">
+            {% for t in row.tiers %}
+              {% set leading = t.tier.id == results.leading_tier_id %}
+              {% set mine = my_tier_id and t.tier.id == my_tier_id %}
+              <li {% if mine %}class="is-mine"{% endif %}>
+                <div class="tier-line">
+                  <span class="part-tag">{{ t.tier.level_label }}</span>
+                  <span class="tier-goal">{{ t.tier.goal_cents | money(false) }} goal</span>
+                  {% if leading %}<span class="leading-flag">{{ leading_word }}</span>{% endif %}
+                  {% if mine %}<span class="mine-flag">Your vote</span>{% endif %}
+                  <span class="tier-pct">{{ t.percent }}%</span>
+                </div>
+                <progress class="bar {{ 'is-leading' if leading }}" max="100" value="{{ t.percent }}"
+                          aria-label="{{ row.option.name }}, {{ t.tier.level_label }}: {{ t.percent }}% of votes">{{ t.percent }}%</progress>
+              </li>
+            {% endfor %}
+          </ul>
+        </article>
+      {% endfor %}
+    </div>
+
+{% endmacro %}

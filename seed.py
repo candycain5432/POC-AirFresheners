@@ -29,6 +29,7 @@ from app.models import (
     FundingGoal, GarageMember, Install, InstallPhoto, MeetDrop, Order, OrderItem, PartOption,
     PartTier, Product, RevivalCar, Vote, VoteRound,
 )
+from app.models._common import utcnow
 from app.models.shop import BlindBagResult
 from app.services.codes import create_codes, format_code, new_order_reference
 from seed_images import make_placeholder
@@ -129,21 +130,58 @@ def seed_installs(upload_dir):
 # --------------------------------------------------------------------------
 # Shop
 # --------------------------------------------------------------------------
+# Sample catalogue data lives at module level so other scripts (for example
+# tools/make_placeholder_art.py, which draws one photo per product) can reuse it.
+
+# meet name, date, location, exclusive scent, scent notes, quantity made, sold out?, colour
+MEETS = [
+    ("Spring Thaw Swap Meet", date(2026, 4, 25), "County Fairgrounds, Lot C", "Thaw Out",
+     "Wet asphalt, cut grass and a hint of two-stroke.", 60, True, "#6f8f5a"),
+    ("Summer Night Cruise", date(2026, 7, 18), "Riverside Diner parking lot", "Neon Nights",
+     "Cherry soda, warm vinyl and late-night fries.", 80, True, "#b0306a"),
+    ("Harvest Hoods Meet", date(2026, 10, 11), "Old Mill car park", "Harvest Hood",
+     "Apple cider, woodsmoke and a warm engine bay.", 100, True, "#a8562a"),
+    ("Frost Fest Cars & Coffee", date(2026, 12, 6), "Hilltop Coffee Roasters", "Cold Start",
+     "Frosted pine, espresso and cold steel.", 120, False, "#4f7f99"),
+    ("New Year Rust Run", date(2027, 1, 3), "Lakeside Industrial Park", "Rust Run",
+     "Leather, clove and a little bit of gasoline (the nice kind).", 120, False, "#8a5a3b"),
+]
+
+# slug, name, kind, description, price ($), fresheners per unit, colour
+PRODUCTS = [
+    ("burnt-clutch", "Burnt Clutch", "regular",
+     "Smoked vanilla, cedar and a whisper of tobacco. Smells like a hard launch.", 8, 1, "#c2571a"),
+    ("fresh-primer", "Fresh Primer", "regular",
+     "Clean cotton and bright citrus. A blank-slate scent for a blank-slate panel.", 8, 1, "#9aa0a6"),
+    ("barn-find", "Barn Find", "regular",
+     "Sweet hay, old cedar boards and worn leather. Our tribute to Lazarus.", 8, 1, "#a3772c"),
+    ("cherry-bomb", "Cherry Bomb", "regular",
+     "Black cherry and almond. Loud, sweet, a little obnoxious - like a glasspack.", 8, 1, "#8f1d2c"),
+    ("night-shift", "Night Shift", "regular",
+     "Cool bergamot, amber and dark musk for the late-night garage sessions.", 8, 1, "#2f4a63"),
+    ("starter-kit-3-pack", "Starter Kit 3-Pack", "bundle",
+     "Burnt Clutch, Fresh Primer and Cherry Bomb in one bag. Three fresheners = three codes = three votes.",
+     20, 3, "#d98236"),
+    ("custom-car-freshie", "Custom Car Freshie", "custom",
+     "Hand-cut in the shape of YOUR car, painted to match, in the scent of your choice. "
+     "Describe your car when you order and we'll send a proof.", 14, 1, "#5c7a3a"),
+    ("blind-bag-chase", "Blind Bag Chase", "blind",
+     "Mystery scent in a sealed parts bag. About 1 in 10 is a rare chase freshener. "
+     "Revealed the moment your order completes.", 6, 1, "#444038"),
+]
+
+# Shown in the "featured" row on the home page.
+FEATURED_SLUGS = {"burnt-clutch", "cherry-bomb", "starter-kit-3-pack", "blind-bag-chase"}
+
+
+def meet_slug(scent_name):
+    """'Cold Start' -> 'meet-cold-start'."""
+    return "meet-" + scent_name.lower().replace(" ", "-")
+
+
 def seed_meets():
-    meets = [
-        ("Spring Thaw Swap Meet", date(2026, 4, 25), "County Fairgrounds, Lot C", "Thaw Out",
-         "Wet asphalt, cut grass and a hint of two-stroke.", 60, True),
-        ("Summer Night Cruise", date(2026, 7, 18), "Riverside Diner parking lot", "Neon Nights",
-         "Cherry soda, warm vinyl and late-night fries.", 80, True),
-        ("Harvest Hoods Meet", date(2026, 10, 11), "Old Mill car park", "Harvest Hood",
-         "Apple cider, woodsmoke and a warm engine bay.", 100, True),
-        ("Frost Fest Cars & Coffee", date(2026, 12, 6), "Hilltop Coffee Roasters", "Cold Start",
-         "Frosted pine, espresso and cold steel.", 120, False),
-        ("New Year Rust Run", date(2027, 1, 3), "Lakeside Industrial Park", "Rust Run",
-         "Leather, clove and a little bit of gasoline (the nice kind).", 120, False),
-    ]
     rows = []
-    for name, when, where, scent, desc, qty, sold_out in meets:
+    for name, when, where, scent, desc, qty, sold_out, _colour in MEETS:
         m = MeetDrop(meet_name=name, meet_date=when, location=where, scent_name=scent,
                      scent_description=desc, quantity=qty, sold_out=sold_out)
         db.session.add(m)
@@ -153,41 +191,20 @@ def seed_meets():
 
 
 def seed_products(meets):
-    products = [
-        # slug, name, kind, description, price, fresheners_per_unit, colour
-        ("burnt-clutch", "Burnt Clutch", "regular",
-         "Smoked vanilla, cedar and a whisper of tobacco. Smells like a hard launch.", 8, 1, "#c2571a"),
-        ("fresh-primer", "Fresh Primer", "regular",
-         "Clean cotton and bright citrus. A blank-slate scent for a blank-slate panel.", 8, 1, "#9aa0a6"),
-        ("barn-find", "Barn Find", "regular",
-         "Sweet hay, old cedar boards and worn leather. Our tribute to Lazarus.", 8, 1, "#a3772c"),
-        ("cherry-bomb", "Cherry Bomb", "regular",
-         "Black cherry and almond. Loud, sweet, a little obnoxious - like a glasspack.", 8, 1, "#8f1d2c"),
-        ("night-shift", "Night Shift", "regular",
-         "Cool bergamot, amber and dark musk for the late-night garage sessions.", 8, 1, "#2f4a63"),
-        ("starter-kit-3-pack", "Starter Kit 3-Pack", "bundle",
-         "Burnt Clutch, Fresh Primer and Cherry Bomb in one bag. Three fresheners = three codes = three votes.",
-         20, 3, "#d98236"),
-        ("custom-car-freshie", "Custom Car Freshie", "custom",
-         "Hand-cut in the shape of YOUR car, painted to match, in the scent of your choice. "
-         "Tell us about your car at checkout and we'll send a proof.", 14, 1, "#5c7a3a"),
-        ("blind-bag-chase", "Blind Bag Chase", "blind",
-         "Mystery scent in a sealed parts bag. About 1 in 10 is a rare chase freshener. "
-         "Revealed the moment your order completes.", 6, 1, "#444038"),
-    ]
     rows = {}
-    for i, (slug, name, kind, desc, price, per_unit, colour) in enumerate(products):
+    for i, (slug, name, kind, desc, price, per_unit, colour) in enumerate(PRODUCTS):
         p = Product(slug=slug, name=name, kind=kind, scent_description=desc, price_cents=dollars(price),
-                    fresheners_per_unit=per_unit, accent_color=colour, position=i)
+                    fresheners_per_unit=per_unit, accent_color=colour, position=i,
+                    is_featured=slug in FEATURED_SLUGS)
         db.session.add(p)
         rows[slug] = p
 
     # One meet-exclusive product per meet drop. Past meets are sold out.
-    for j, meet in enumerate(meets):
-        slug = "meet-" + meet.scent_name.lower().replace(" ", "-")
+    for j, (meet, row) in enumerate(zip(meets, MEETS)):
+        slug = meet_slug(meet.scent_name)
         p = Product(slug=slug, name=f"{meet.scent_name} (Meet Exclusive)", kind="meet",
                     scent_description=f"{meet.scent_description} Only made for {meet.meet_name}.",
-                    price_cents=dollars(10), accent_color="#b8860b", position=20 + j,
+                    price_cents=dollars(10), accent_color=row[-1], position=20 + j,
                     sold_out=meet.sold_out, meet_drop_id=meet.id)
         db.session.add(p)
         rows[slug] = p
@@ -286,7 +303,8 @@ def seed_voting(codes):
     # Closed round: its winner is the current funding goal.
     closed = VoteRound(title="Round 6: Stopping Power",
                        description="Lazarus moves now. Stopping is another matter. What's first?",
-                       status="closed", opened_at=datetime(2026, 10, 5), closed_at=datetime(2026, 10, 19))
+                       status="closed", opened_at=datetime(2026, 10, 5),
+                       closes_at=datetime(2026, 10, 19), closed_at=datetime(2026, 10, 19))
     db.session.add(closed)
     brakes = add_option(closed, "Brake calipers", "Front calipers are seized. Pads are fossilised.", [
         ("budget", "Remanufactured calipers + basic pads", 280),
@@ -319,7 +337,9 @@ def seed_voting(codes):
     # Open round: what comes after the brakes.
     current = VoteRound(title="Round 7: What's After the Brakes?",
                         description="Once Lazarus can stop, what should we fund next? One vote per freshener code.",
-                        status="open", opened_at=datetime(2026, 11, 1))
+                        status="open", opened_at=datetime(2026, 11, 1),
+                        # Relative to "now" so the countdown always has time left after seeding.
+                        closes_at=(utcnow() + timedelta(days=5)).replace(minute=0, second=0, microsecond=0))
     db.session.add(current)
     seats = add_option(current, "Seats", "The driver's seat is mostly springs and regret.", [
         ("budget", "Junkyard seats, re-covered", 180),

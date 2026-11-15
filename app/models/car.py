@@ -47,14 +47,16 @@ class FundingGoal(db.Model):
     The part currently being funded (shown on the progress bar).
 
     Usually created automatically when a vote round closes (the winning
-    part + tier). Only one goal has status "active" at a time; it becomes
-    "installed" when the admin logs the install.
+    part + tier). Status:
+      "active"    - shown on the progress bar (only one at a time)
+      "queued"    - a vote winner waiting for the active part to be installed
+      "installed" - done; the admin logged the install
     """
     id = db.Column(db.Integer, primary_key=True)
     part_name = db.Column(db.String(120), nullable=False)   # "Brake calipers"
     tier = db.Column(db.String(20), nullable=False)          # budget / mid / high
     goal_cents = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.String(20), nullable=False, default="active")  # active / installed
+    status = db.Column(db.String(20), nullable=False, default="active")  # active / queued / installed
     tier_id = db.Column(db.Integer, db.ForeignKey("part_tier.id"))       # winning ballot line, if any
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
@@ -100,3 +102,5 @@ class FundEntry(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"))
     note = db.Column(db.String(200), default="")
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+    order = db.relationship("Order")

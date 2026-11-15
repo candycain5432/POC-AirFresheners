@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Your cart{% endblock %}
+{% block content %}
+<section class="wrap page-section narrow">
+  <h1 class="page-title">Your cart</h1>
+  {% if not lines %}
+    <p>Nothing on the bench yet.</p>
+    <a class="btn" href="{{ url_for('shop.index') }}">Go shopping</a>
+  {% else %}
+    <div class="work-order">
+      <p class="wo-label">Parts order · draft</p>
+      <ul class="cart-lines">
+        {% for line in lines %}
+          <li class="cart-line {{ 'is-unavailable' if not line.available }}">
+            <img src="{{ product_image_url(line.product) }}" alt="" width="64" height="64">
+            <div class="cart-line-info">
+              <strong>{{ line.product.name }}</strong>
+              <span class="muted">{{ line.product.price_cents | money }} each</span>
+              {% if line.note %}<span class="cart-note">“{{ line.note }}”</span>{% endif %}
+              {% if not line.available %}<span class="error-text">No longer available, please remove it</span>{% endif %}
+            </div>
+            <form method="post" action="{{ url_for('shop.cart_update') }}" class="cart-qty">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="index" value="{{ line.index }}">
+              <label class="visually-hidden" for="qty-{{ line.index }}">Quantity of {{ line.product.name }}</label>
+              <select id="qty-{{ line.index }}" name="qty" class="js-autosubmit">
+                {% for n in range(0, max_qty + 1) %}
+                  <option value="{{ n }}" {% if n == line.qty %}selected{% endif %}>{{ 'Remove' if n == 0 else n }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-small btn-ghost js-hide">Update</button>
+            </form>
+            <span class="cart-line-total">{{ line.line_total_cents | money }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="cart-total">Total <strong>{{ total | money }}</strong></p>
+    </div>
+    <div class="cart-actions">
+      <a class="btn btn-ghost" href="{{ url_for('shop.index') }}">Keep shopping</a>
+      <a class="btn" href="{{ url_for('shop.checkout') }}">Checkout</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

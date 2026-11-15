@@ -23,7 +23,7 @@ class Config:
 
     # SQLite database file. SQLAlchemy URL format: sqlite:///<absolute path>
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///" + os.path.join(INSTANCE_DIR, "rust_revival.db")
+        "DATABASE_URL", "sqlite:///" + os.path.join(INSTANCE_DIR, "salvage_scent.db")
     )
 
     # Where uploaded/generated images live, and the largest request we accept.
@@ -32,8 +32,12 @@ class Config:
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
 
     # The admin password is stored ONLY as a hash. Generate one with:
-    #   flask --app app hash-password
+    #   python -m flask --app app hash-password
     ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+
+    # Which payment provider checkout uses. Only "mock" exists for now;
+    # see app/services/payments.py for how to add Stripe test mode.
+    PAYMENT_PROVIDER = os.environ.get("PAYMENT_PROVIDER", "mock")
 
     # Code-guessing protection: this many wrong codes from one IP within the
     # window locks that IP out of code entry until the window passes.

@@ -1,100 +1,207 @@
 {% extends "base.html" %}
 {% from "partials/progress.html" import progress_bar %}
 {% from "partials/video.html" import install_video %}
+{% from "partials/countdown.html" import countdown_box %}
+{% from "partials/results.html" import results_grid %}
 {% block title %}Handmade car fresheners{% endblock %}
 
 {% block content %}
-{# ---------- Hero ---------- #}
+{# ================= Hero: words left, car photo right (photo first on phones) ================= #}
 <section class="hero">
-  <div class="wrap">
-    <p class="eyebrow">Handmade aroma-bead car fresheners</p>
-    <h1 class="hero-title">Every freshener helps bring a <span class="rust">dead car</span> back to life.</h1>
-    <p class="hero-sub">
-      {% if car %}We're rebuilding <strong>{{ car.nickname }}</strong>, a {{ car.description | lower }}, in public. {% endif %}
-      Buy a freshener, get a code, vote on the next part. We install it and film every wrench turn.
-    </p>
-    <div class="hero-actions">
-      <a class="btn" href="{{ url_for('shop.index') }}">Shop fresheners</a>
-      <a class="btn btn-ghost" href="{{ url_for('vote.index') }}">Vote on the next part</a>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Handmade car fresheners</p>
+      <h1 class="hero-title">Every freshener helps bring a <span class="accent">dead car</span> back to life.</h1>
+      <p class="hero-sub">
+        {% if car %}We're rebuilding {{ car.nickname }}, a {{ car.description | lower }}, in public.{% endif %}
+        Buy a freshener, vote on the next part, and watch it go in.
+      </p>
+      <div class="hero-actions">
+        <a class="btn" href="{{ url_for('shop.index') }}">Shop fresheners</a>
+        <a class="btn btn-ghost" href="{{ url_for('vote.index') }}">Vote on the next part</a>
+      </div>
+    </div>
+
+    <div class="hero-media">
+      <figure class="hero-photo">
+        {#
+          REAL PHOTO GOES HERE: save your photo of Lazarus as
+              app/static/img/lazarus-hero.jpg
+          (landscape, about 1600 x 1280, under ~300 KB). The page darkens it and
+          adds contrast and grain in CSS (.hero-photo in style.css), so a normal,
+          well-lit shot works best. Update the alt text below to describe it.
+        #}
+        <img src="{{ url_for('static', filename='img/lazarus-hero.jpg') }}"
+             alt="{{ car.nickname if car else 'The Revival Car' }}, the project hatchback, in the garage"
+             width="1600" height="1280" fetchpriority="high">
+      </figure>
+      <div class="hero-funding">
+        {{ progress_bar(fund) }}
+      </div>
     </div>
   </div>
 </section>
 
-{# ---------- Progress bar ---------- #}
-<section class="wrap page-section">
-  {{ progress_bar(fund) }}
-  <p class="section-link"><a href="{{ url_for('car.index') }}">See the full build log →</a></p>
+{# ================= Vote open: the second-loudest thing on the page ================= #}
+{% if open_round %}
+<section class="vote-band" aria-labelledby="vote-heading">
+  <div class="checker-strip" aria-hidden="true"></div>
+  <div class="wrap vote-inner">
+    <div class="vote-top">
+      <div>
+        <div class="tag-row"><span class="eyebrow tag-accent">Vote open</span></div>
+        <h2 id="vote-heading">{{ open_round.title }}</h2>
+        {% if open_round.description %}<p class="lead">{{ open_round.description }}</p>{% endif %}
+      </div>
+
+      {# Countdown: close time comes from the database (vote_round.closes_at). #}
+      {{ countdown_box(open_round, seconds_left, countdown) }}
+    </div>
+
+    {{ results_grid(results) }}
+
+    <div class="vote-cta">
+      <a class="btn btn-large" href="{{ url_for('vote.index') }}">Cast your vote</a>
+      <p>{{ results.total }} vote{{ 's' if results.total != 1 }} so far · one vote per freshener code</p>
+    </div>
+  </div>
 </section>
+{% elif last_closed %}
+{# No round open: a quieter band with the last result. #}
+<section class="vote-band vote-band-quiet" aria-labelledby="vote-heading">
+  <div class="checker-strip" aria-hidden="true"></div>
+  <div class="wrap vote-inner">
+    <div class="tag-row"><span class="eyebrow">Voting closed</span></div>
+    <h2 id="vote-heading">{{ last_closed.title }}</h2>
+    {% if last_closed.winning_tier %}
+      <p class="lead">Winner: <strong>{{ last_closed.winning_tier.option.name }}</strong>,
+        {{ last_closed.winning_tier.level_label | lower }} ({{ last_closed.winning_tier.goal_cents | money(false) }}).
+        The next round opens after the next install.</p>
+    {% endif %}
+    <a class="text-link" href="{{ url_for('vote.results', round_id=last_closed.id) }}">See the final results</a>
+  </div>
+</section>
+{% endif %}
 
-{# ---------- Three quick links: vote, shop, latest install ---------- #}
+{# ================= Featured products ================= #}
+{% if featured %}
 <section class="wrap page-section">
-  <h2 class="section-title">On the bench</h2>
-  <div class="card-grid">
-    <article class="card">
-      <p class="stamp">Vote open</p>
-      {% if open_round %}
-        <h3>{{ open_round.title }}</h3>
-        <p>{{ open_round.description }}</p>
-        <p class="muted">{{ open_round.options | length }} parts on the ballot · 1 vote per freshener code</p>
-        <a class="btn btn-small" href="{{ url_for('vote.index') }}">Cast your vote</a>
-      {% else %}
-        <h3>No vote right now</h3>
-        <p>The next round opens after the current part is installed.</p>
-        <a class="btn btn-small btn-ghost" href="{{ url_for('vote.index') }}">Past results</a>
-      {% endif %}
-    </article>
+  <div class="section-head section-head-row">
+    <div>
+      <p class="eyebrow">Shop</p>
+      {# "From" price = the cheapest product you can buy right now, read from the database. #}
+      <h2 class="section-title">Fresheners from {{ from_price | money(false) }}</h2>
+    </div>
+    <a class="text-link" href="{{ url_for('shop.index') }}">Shop all</a>
+  </div>
+  <div class="mini-grid">
+    {% for p in featured %}
+      <a class="mini-card" href="{{ url_for('shop.product', slug=p.slug) }}">
+        {# Product photos: app/static/img/products/<slug>.jpg (see that folder's README). #}
+        <img src="{{ product_image_url(p) }}" alt="{{ p.name }}" width="800" height="800" loading="lazy">
+        <span class="mini-name">{{ p.name }}</span>
+        <span class="mini-price">{{ p.price_cents | money(false) }}</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
-    <article class="card">
-      <p class="stamp">Shop</p>
-      <h3>Freshies from $6</h3>
-      <p>Regular scents, 3-pack bundles, custom shapes of your own car, meet exclusives, and blind-bag chase fresheners.</p>
-      <p class="muted">Each freshener comes with its own vote code.</p>
-      <a class="btn btn-small" href="{{ url_for('shop.index') }}">Browse the shelf</a>
-    </article>
-
-    <article class="card card-video">
-      <p class="stamp">Latest install</p>
-      {% if latest_install %}
-        <h3>{{ latest_install.part_name }}</h3>
-        <p class="muted">
-          <span class="part-tag part-tag-small">{{ latest_install.tier | tier_label }}</span>
-          {{ latest_install.cost_cents | money(false) }} · {{ latest_install.installed_on | nice_date }}
-        </p>
-        {{ install_video(latest_install) }}
-      {% else %}
-        <h3>First install coming soon</h3>
-      {% endif %}
-    </article>
+{# ================= How it works (dark band) ================= #}
+<section class="band-dark">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2 class="section-title">You fund it. You pick it. We fit it.</h2>
+    </div>
+    {# Simple line icons drawn inline (no icon library). stroke="currentColor" makes them follow the text colour. #}
+    <ol class="steps">
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4"/><path d="M8.5 6.5h7l1.6 12.2a2 2 0 0 1-2 2.3H8.9a2 2 0 0 1-2-2.3z"/><circle cx="12" cy="9" r="1.1"/><path d="M9.5 13.5h5M9.8 16.5h4.4"/>
+          </svg>
+        </span>
+        <span class="step-num">Step 01</span>
+        <strong>Buy a freshener</strong>
+        Hand-poured aroma beads, made in our garage.
+      </li>
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 4.5V11l9.3 9.3a1.6 1.6 0 0 0 2.3 0l5.7-5.7a1.6 1.6 0 0 0 0-2.3L11 3H4.5A1.5 1.5 0 0 0 3 4.5z"/><circle cx="7.5" cy="7.5" r="1.4"/><path d="M11 12.5l2.5 2.5M13 10.5l2.5 2.5"/>
+          </svg>
+        </span>
+        <span class="step-num">Step 02</span>
+        <strong>Get your code</strong>
+        Every freshener carries its own unique code.
+      </li>
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 12V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V12"/><path d="m10 7.5 1.5 1.5L14 6.5"/><path d="M3.5 12h17v7.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M7 12h10"/>
+          </svg>
+        </span>
+        <span class="step-num">Step 03</span>
+        <strong>Vote on the next part</strong>
+        Pick the part and the budget it gets.
+      </li>
+      <li>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15.5 3.5a4.5 4.5 0 0 0-4.2 6.1L4 16.9a1.5 1.5 0 0 0 0 2.1l1 1a1.5 1.5 0 0 0 2.1 0l7.3-7.3a4.5 4.5 0 0 0 6.1-4.2l-2.8 2.8-2.6-.4-.4-2.6z"/>
+          </svg>
+        </span>
+        <span class="step-num">Step 04</span>
+        <strong>Watch it go in</strong>
+        Every install is filmed and posted.
+      </li>
+    </ol>
   </div>
 </section>
 
-{# ---------- How it works ---------- #}
-<section class="wrap page-section">
-  <h2 class="section-title">How it works</h2>
-  <ol class="steps">
-    <li><span class="step-num">01</span><strong>Buy a freshener.</strong> Hand-poured aroma beads, made in our garage.</li>
-    <li><span class="step-num">02</span><strong>Get your code.</strong> Every freshener carries a unique code.</li>
-    <li><span class="step-num">03</span><strong>Vote on the next part.</strong> Pick the part and the budget.</li>
-    <li><span class="step-num">04</span><strong>Watch it go in.</strong> Every install is filmed and posted.</li>
-  </ol>
+{# ================= Latest install (dark band) ================= #}
+{% if latest_install %}
+<section class="band-dark">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Latest install</p>
+    </div>
+    <div class="feature">
+      <div>{{ install_video(latest_install) }}</div>
+      <div>
+        <h3>{{ latest_install.part_name }}</h3>
+        <p class="feature-meta">
+          <span class="part-tag">{{ latest_install.tier | tier_label }}</span>
+          <span>{{ latest_install.cost_cents | money(false) }}</span>
+          <span>{{ latest_install.installed_on | nice_date }}</span>
+        </p>
+        {% if latest_install.notes %}<p>{{ latest_install.notes }}</p>{% endif %}
+        <a class="text-link" href="{{ url_for('car.index') }}#install-{{ latest_install.id }}">See every install</a>
+      </div>
+    </div>
+  </div>
 </section>
+{% endif %}
 
-{# ---------- Car of the Month ---------- #}
+{# ================= Car of the Month ================= #}
 {% if car_of_month %}
   {% set member = car_of_month.member %}
   <section class="wrap page-section">
-    <h2 class="section-title">Car of the Month</h2>
     <article class="feature-car">
       {% if member.photo_filename %}
         <img src="{{ url_for('uploads.uploaded_file', filename=member.photo_filename) }}"
              alt="{{ member.car_name }}, owned by {{ member.owner_name }}" loading="lazy" width="960" height="720">
       {% endif %}
-      <div class="feature-car-body">
-        <span class="part-tag">{{ car_of_month.month }}</span>
+      <div>
+        <div class="tag-row">
+          <span class="eyebrow tag-accent">Car of the Month</span>
+          <span class="part-tag">{{ car_of_month.month }}</span>
+        </div>
         <h3>{{ member.car_name }}</h3>
         <p class="muted">Owned by {{ member.owner_name }}</p>
         <p>{{ car_of_month.blurb }}</p>
-        <a class="btn btn-small btn-ghost" href="{{ url_for('garage.index') }}">Visit the Garage</a>
+        <a class="text-link" href="{{ url_for('garage.index') }}">Visit the Garage</a>
       </div>
     </article>
   </section>

@@ -30,6 +30,33 @@ def active_goal():
     return FundingGoal.query.filter_by(status="active").order_by(FundingGoal.created_at.desc()).first()
 
 
+def next_goal():
+    """The part queued up after the current one (a vote winner waiting its turn), or None."""
+    return FundingGoal.query.filter_by(status="queued").order_by(FundingGoal.created_at).first()
+
+
+def add_goal(part_name, tier, goal_cents, tier_id=None):
+    """
+    Add a new part to fund. It becomes the active goal straight away if
+    nothing is being funded; otherwise it is queued and waits its turn, so a
+    half-funded part never disappears from the progress bar.
+    """
+    status = "queued" if active_goal() else "active"
+    goal = FundingGoal(part_name=part_name, tier=tier, goal_cents=goal_cents, tier_id=tier_id, status=status)
+    db.session.add(goal)
+    return goal
+
+
+def activate_next_goal():
+    """Called after the active part is installed: promote the next queued goal (if any)."""
+    if active_goal():
+        return active_goal()
+    goal = next_goal()
+    if goal:
+        goal.status = "active"
+    return goal
+
+
 def fund_summary():
     """
     Everything the progress bar and totals need, in one dictionary.
@@ -40,7 +67,7 @@ def fund_summary():
     on_hand = raised - spent
     goal = active_goal()
 
-    summary = {"raised": raised, "spent": spent, "on_hand": on_hand, "goal": goal,
+    summary = {"raised": raised, "spent": spent, "on_hand": on_hand, "goal": goal, "next_goal": next_goal(),
                "toward_goal": 0, "remaining": 0, "percent": 0, "funded": False}
     if goal:
         toward = max(0, min(on_hand, goal.goal_cents))   # clamp to 0..goal

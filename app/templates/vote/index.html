@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "partials/countdown.html" import countdown_box %}
+{% block title %}Vote on the next part{% endblock %}
+{% block description %}Use your freshener code to vote on the next part for the Revival Car.{% endblock %}
+
+{% block content %}
+{% if round and round.status == 'open' %}
+<section class="wrap page-section">
+  <div class="vote-top">
+    <div class="section-head">
+      <div class="tag-row"><span class="eyebrow tag-accent">Vote open</span></div>
+      <h1 class="page-title">{{ round.title }}</h1>
+      {% if round.description %}<p class="lead">{{ round.description }}</p>{% endif %}
+    </div>
+    {{ countdown_box(round, seconds_left, countdown) }}
+  </div>
+
+  {# One summary of problems at the top, announced to screen readers. #}
+  {% if errors %}
+    <div class="error-summary" role="alert">
+      <strong>Your vote wasn't counted yet:</strong>
+      <ul>{% for message in errors.values() %}<li>{{ message }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('vote.index') }}" class="ballot" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {# ---- Step 1: the choice. One radio group across every part, so only one line can be picked. ---- #}
+    <fieldset class="ballot-step" {% if errors.tier_id %}aria-describedby="tier-error"{% endif %}>
+      <legend><span class="ballot-step-num">1</span> Pick a part and a budget</legend>
+      {% if errors.tier_id %}<p class="error-text" id="tier-error">{{ errors.tier_id }}</p>{% endif %}
+      {% for option in round.options %}
+        <div class="ballot-option" role="group" aria-labelledby="option-{{ option.id }}">
+          <h2 class="ballot-option-title" id="option-{{ option.id }}">{{ option.name }}</h2>
+          {% if option.description %}<p class="muted">{{ option.description }}</p>{% endif %}
+          <div class="tier-cards">
+            {% for tier in option.tiers %}
+              <label class="tier-card">
+                <input type="radio" name="tier_id" value="{{ tier.id }}"
+                       {% if form.tier_id == tier.id | string %}checked{% endif %}>
+                <span class="tier-card-body">
+                  <span class="part-tag">{{ tier.level_label }}</span>
+                  <span class="tier-card-goal">{{ tier.goal_cents | money(false) }}</span>
+                  {% if tier.description %}<span class="tier-card-desc">{{ tier.description }}</span>{% endif %}
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    {# ---- Step 2: the code. ---- #}
+    <div class="ballot-step">
+      <label for="code" class="ballot-legend"><span class="ballot-step-num">2</span> Enter your freshener code</label>
+      <input id="code" name="code" type="text" class="code-input" value="{{ form.code }}"
+             maxlength="30" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             placeholder="K7PX-M3QD-WR"
+             aria-describedby="code-hint{% if errors.code %} code-error{% endif %}"
+             {% if errors.code %}aria-invalid="true"{% endif %}>
+      {% if errors.code %}<p class="error-text" id="code-error">{{ errors.code }}</p>{% endif %}
+      <p class="field-hint" id="code-hint">It's on your freshener's tag and your order confirmation. Dashes and spaces don't matter.
+        One vote per code per round.</p>
+      <a class="text-link" href="{{ url_for('shop.index') }}">Need a code? Every freshener comes with one</a>
+    </div>
+
+    <button class="btn btn-large btn-block-mobile" type="submit">Lock in my vote</button>
+  </form>
+
+  <p><a class="text-link" href="{{ url_for('vote.results', round_id=round.id) }}">See the standings so far</a></p>
+</section>
+
+{% else %}
+<section class="wrap page-section narrow">
+  <div class="section-head">
+    <div class="tag-row"><span class="eyebrow">Voting</span></div>
+    <h1 class="page-title">No vote open right now</h1>
+    <p class="lead">The next round opens once the current part is installed. Your codes keep working: every code gets a vote in every round.</p>
+  </div>
+  <a class="btn" href="{{ url_for('car.index') }}">Follow the build</a>
+</section>
+{% endif %}
+
+{# ---------- Past rounds ---------- #}
+{% if past_rounds %}
+<section class="wrap page-section">
+  <div class="section-head"><h2 class="section-title">Past rounds</h2></div>
+  <ul class="past-rounds">
+    {% for r in past_rounds %}
+      <li>
+        <a class="past-round" href="{{ url_for('vote.results', round_id=r.id) }}">
+          <span class="past-round-title">{{ r.title }}</span>
+          <span class="past-round-winner">
+            {% if r.winning_tier %}
+              Winner: <strong>{{ r.winning_tier.option.name }}</strong>
+              <span class="part-tag">{{ r.winning_tier.level_label }}</span>
+              {{ r.winning_tier.goal_cents | money(false) }}
+            {% else %}No votes cast{% endif %}
+          </span>
+          <span class="muted">Closed {{ r.closed_at | nice_date }} · {{ r.votes | length }} votes</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

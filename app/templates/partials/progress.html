@@ -1,36 +1,42 @@
 {#
-  Revival Car progress bar. Usage:
+  Revival Car progress card. Usage:
     {% from "partials/progress.html" import progress_bar %}
     {{ progress_bar(fund) }}
   `fund` comes from services/fund.py:fund_summary().
 #}
 {% macro progress_bar(fund, heading_level=2) %}
-<section class="progress-panel" aria-labelledby="progress-heading">
-  <div class="progress-head">
-    <span class="stamp">Now funding</span>
-    {% if fund.goal %}
-      <span class="part-tag">{{ fund.goal.tier | tier_label }}</span>
-    {% endif %}
-  </div>
+<section class="progress-card" aria-labelledby="progress-heading">
   {% if fund.goal %}
-    <h{{ heading_level }} id="progress-heading" class="progress-title">{{ fund.goal.part_name }}</h{{ heading_level }}>
-    {# A native <progress> element: screen readers announce it correctly. #}
-    <progress class="gauge" max="{{ fund.goal.goal_cents }}" value="{{ fund.toward_goal }}"
-              aria-label="Funding progress for {{ fund.goal.part_name }}">{{ fund.percent }}%</progress>
-    <p class="progress-figures">
-      <span><strong>{{ fund.toward_goal | money(false) }}</strong> of {{ fund.goal.goal_cents | money(false) }}</span>
-      <span class="percent">{{ fund.percent }}%</span>
-    </p>
-    <p class="progress-callout">
+    <div class="tag-row">
+      <span class="eyebrow tag-accent">Now funding</span>
+      <span class="part-tag">{{ fund.goal.tier | tier_label }}</span>
+    </div>
+    <h{{ heading_level }} id="progress-heading" class="progress-part">{{ fund.goal.part_name }}</h{{ heading_level }}>
+    <p class="progress-remaining">
       {% if fund.funded %}
-        Fully funded! Install video coming soon.
+        <strong>Funded!</strong> Install video coming soon.
       {% else %}
         <strong>{{ fund.remaining | money(false) }} to go</strong> for the new {{ fund.goal.part_name | lower }}
       {% endif %}
     </p>
+    {# A native <progress> element: screen readers announce it correctly. #}
+    <div class="gauge-track">
+      <progress class="gauge" max="{{ fund.goal.goal_cents }}" value="{{ fund.toward_goal }}"
+                aria-label="Funding progress for {{ fund.goal.part_name }}">{{ fund.percent }}%</progress>
+      {# The checkered "finish line" at the end of the bar. #}
+      <span class="gauge-finish" aria-hidden="true"></span>
+    </div>
+    <p class="progress-figures">
+      <span><strong>{{ fund.toward_goal | money(false) }}</strong> raised of {{ fund.goal.goal_cents | money(false) }}</span>
+      <span>{{ fund.percent }}%</span>
+    </p>
+    {% if fund.next_goal %}
+      <p class="progress-next">Up next: <strong>{{ fund.next_goal.part_name }}</strong> ({{ fund.next_goal.tier | tier_label | lower }})</p>
+    {% endif %}
   {% else %}
-    <h{{ heading_level }} id="progress-heading" class="progress-title">Next part: you decide</h{{ heading_level }}>
-    <p class="progress-callout">No part is being funded right now. The next vote sets the goal.</p>
+    <div class="tag-row"><span class="eyebrow tag-accent">Now funding</span></div>
+    <h{{ heading_level }} id="progress-heading" class="progress-part">Next part: you decide</h{{ heading_level }}>
+    <p class="progress-remaining">No part is being funded right now. The next vote sets the goal.</p>
   {% endif %}
 </section>
 {% endmacro %}

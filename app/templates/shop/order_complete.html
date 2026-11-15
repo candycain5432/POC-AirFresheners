@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Order {{ order.reference }}{% endblock %}
+{% block content %}
+<section class="wrap page-section narrow">
+  <p class="eyebrow">Order {{ order.reference }}<span class="dot">·</span>Mock payment</p>
+  <h1 class="page-title">You're in the build, {{ order.customer_name }}!</h1>
+  <p class="lead">Your {{ order.total_cents | money }} just went into the Revival Car fund.
+    {% if fund.goal and not fund.funded %}Now <strong class="accent">{{ fund.remaining | money(false) }} to go</strong> for the {{ fund.goal.part_name | lower }}.
+    {% elif fund.goal %}The {{ fund.goal.part_name | lower }} are fully funded!{% endif %}</p>
+
+  {# ----- Blind bag reveals ----- #}
+  {% for item in order.items if item.blind_results %}
+    <h2 class="section-title">Blind bag reveal</h2>
+    <ul class="reveal-list">
+      {% for result in item.blind_results %}
+        <li class="reveal {{ 'is-chase' if result.scent.is_chase }}">
+          {% if result.scent.is_chase %}<span class="stamp">Chase!</span>{% endif %}
+          <strong>{{ result.scent.name }}</strong>
+          <span class="muted">{{ result.scent.description }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+
+  {# ----- Codes ----- #}
+  <h2 class="section-title">Your freshener codes <span class="count">{{ codes | length }}</span></h2>
+  <p>Each code = one vote per round, and one code can set up your car in the Garage.
+     <strong>Save them now</strong>: screenshot this page. In real life they'd be printed on each freshener's tag.</p>
+  <ul class="code-grid">
+    {% for c in codes %}
+      <li class="code-card">
+        <img src="{{ c.qr }}" alt="QR code for freshener code {{ c.code | code }}" width="132" height="132">
+        <div>
+          <span class="code-value">{{ c.code | code }}</span>
+          <span class="muted small">{{ c.item }}</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <div class="work-order">
+    <p class="wo-label">Receipt</p>
+    <ul class="summary-lines">
+      {% for item in order.items %}
+        <li><span>{{ item.quantity }} × {{ item.product_name }}{% if item.custom_note %}<br><small>“{{ item.custom_note }}”</small>{% endif %}</span>
+            <span>{{ item.line_total_cents | money }}</span></li>
+      {% endfor %}
+    </ul>
+    <p class="cart-total">Total <strong>{{ order.total_cents | money }}</strong></p>
+  </div>
+
+  <div class="cart-actions">
+    <a class="btn" href="{{ url_for('vote.index') }}">Vote now</a>
+    <a class="btn btn-ghost" href="{{ url_for('car.index') }}">See the car</a>
+  </div>
+</section>
+{% endblock %}
