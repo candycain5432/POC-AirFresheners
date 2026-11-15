@@ -9,10 +9,13 @@ Checkout: turning a cart into an order, and "fulfilling" a paid order.
                                  * adds the order total to the Revival Car fund
 
 fulfill_order() is the single place where a sale "counts". It does nothing
-if the order is already paid, so a payment webhook that fires twice can't
-create duplicate codes or double-count money.
+if the order is already paid, so a payment webhook that fires twice (or a
+webhook and the buyer's return page arriving together) can't create
+duplicate codes or double-count money.
 """
 import secrets
+
+from sqlalchemy import update
 
 from ..extensions import db
 from ..models import BlindBagResult, BlindBagScent, FundEntry, Order, OrderItem
@@ -67,9 +70,18 @@ def fulfill_order(order, payment_reference, provider_name="mock"):
     if order.status == "paid":
         return order
 
-    order.status = "paid"
-    order.payment_provider = provider_name
-    order.payment_reference = payment_reference
+    # Claim the order with one conditional UPDATE. If two requests race here,
+    # the database lets only one of them change "pending" to "paid"; the other
+    # updates 0 rows and stops.
+    claimed = db.session.execute(
+        update(Order)
+        .where(Order.id == order.id, Order.status != "paid")
+        .values(status="paid", payment_provider=provider_name, payment_reference=payment_reference)
+    ).rowcount
+    if not claimed:
+        db.session.rollback()
+        db.session.refresh(order)
+        return order
 
     for item in order.items:
         per_unit = item.product.fresheners_per_unit if item.product else 1
@@ -89,3 +101,10 @@ def fulfill_order(order, payment_reference, provider_name="mock"):
 
 def find_order(reference):
     return Order.query.filter_by(reference=reference).first()
+
+
+def mark_order_failed(order):
+    """An unpaid order whose payment failed or expired. Paid orders are never touched."""
+    if order.status == "pending":
+        order.status = "failed"
+        db.session.commit()

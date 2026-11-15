@@ -40,9 +40,16 @@ class Config:
     ADMIN_LOGIN_ATTEMPT_LIMIT = int(os.environ.get("ADMIN_LOGIN_ATTEMPT_LIMIT", "5"))
     ADMIN_SESSION_MINUTES = int(os.environ.get("ADMIN_SESSION_MINUTES", "120"))
 
-    # Which payment provider checkout uses. Only "mock" exists for now;
-    # see app/services/payments.py for how to add Stripe test mode.
+    # Which payment provider checkout uses: "mock" (instant fake payment) or
+    # "stripe" (Stripe Checkout in TEST mode). See app/services/payments.py.
     PAYMENT_PROVIDER = os.environ.get("PAYMENT_PROVIDER", "mock")
+
+    # Stripe test mode. Only test keys (sk_test_...) are accepted; the app
+    # refuses to start with a live key. The webhook secret (whsec_...) is
+    # optional: without it, payment is confirmed when the buyer returns.
+    STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+    STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    STRIPE_CURRENCY = os.environ.get("STRIPE_CURRENCY", "usd")
 
     # The shop's local time zone (IANA name, e.g. "America/Chicago"). Used to
     # decide which meets are "upcoming" today. Meet dates are local dates.

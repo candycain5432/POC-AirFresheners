@@ -3,8 +3,13 @@
 {% block content %}
 <section class="wrap page-section narrow">
   <h1 class="page-title">Checkout</h1>
+  {% if provider == "stripe" %}
+  <p class="notice"><strong>Stripe test mode:</strong> you'll pay on Stripe's test checkout page. No real money moves
+    and nothing will ship. Use card <code>4242 4242 4242 4242</code>, any future expiry date and any CVC.</p>
+  {% else %}
   <p class="notice"><strong>Proof of concept:</strong> no payment is taken and nothing will ship.
     Your mock order still creates real vote codes and adds to the Revival Car fund.</p>
+  {% endif %}
 
   <div class="work-order">
     <p class="wo-label">Order summary</p>
@@ -30,8 +35,11 @@
              value="{{ form.email }}" {% if errors.email %}aria-invalid="true" aria-describedby="email-error"{% endif %}>
       {% if errors.email %}<p class="error-text" id="email-error">{{ errors.email }}</p>{% endif %}
     </div>
-    {# Stripe test mode would add its payment step here (redirect to Stripe Checkout). #}
+    {% if provider == "stripe" %}
+    <button class="btn btn-block" type="submit">Pay with Stripe (test) · {{ total | money }}</button>
+    {% else %}
     <button class="btn btn-block" type="submit">Place mock order · {{ total | money }}</button>
+    {% endif %}
   </form>
 </section>
 {% endblock %}

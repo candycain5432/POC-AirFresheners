@@ -56,6 +56,50 @@ docker compose run --rm web python seed.py
 The database and uploaded photos live in the `salvage_data` Docker volume, so they
 survive rebuilds. `docker compose down -v` deletes them.
 
+## Stripe test mode (optional)
+
+By default checkout uses a **mock** payment that "succeeds" instantly. To try
+a real payment flow, switch to **Stripe Checkout in test mode**. Buyers are
+sent to Stripe's hosted test checkout page, and no real money ever moves.
+
+1. Get test API keys. Either use a [Stripe sandbox](https://docs.stripe.com/sandboxes)
+   from the Dashboard, or skip sign-up with the Stripe CLI: `stripe sandbox create`.
+   A **restricted key** (`rk_test_...`) with write access to *Checkout Sessions*
+   is safest. A secret key (`sk_test_...`) also works.
+2. Set these in `.env`, or `export` them in your shell:
+   ```bash
+   PAYMENT_PROVIDER=stripe
+   STRIPE_SECRET_KEY=rk_test_...
+   ```
+3. Forward Stripe's webhooks to the app. This is the reliable way an order gets
+   fulfilled, because it works even if the buyer closes the tab after paying:
+   ```bash
+   stripe listen --forward-to localhost:5000/shop/stripe/webhook
+   ```
+   Copy the `whsec_...` it prints into `STRIPE_WEBHOOK_SECRET`, then restart the app.
+4. Check out with card **4242 4242 4242 4242**, any future expiry date and any CVC.
+   Other [test cards](https://docs.stripe.com/testing) simulate declines and 3-D Secure.
+
+How it works:
+
+- The app **refuses to start with a live key** (`sk_live_...`), so a real card
+  can never be charged by mistake.
+- Checkout creates a *pending* order, then a Checkout Session using the prices
+  copied onto that order. The cart is kept until payment is confirmed, so
+  cancelling on Stripe's page loses nothing.
+- An order counts only once Stripe says its session is **paid, for this order,
+  for this exact amount**. The app checks this in two places, and both call
+  `fulfill_order()`, which claims the order atomically, so codes and fund money
+  are never doubled:
+  - the signed webhook (`checkout.session.completed` /
+    `async_payment_succeeded`);
+  - the buyer's return page, which asks Stripe directly so codes show
+    immediately.
+- Expired or failed sessions mark the pending order `failed`.
+- Before going anywhere near live mode, keep the webhook (it's required for
+  delayed payment methods) and work through Stripe's
+  [go-live checklist](https://docs.stripe.com/get-started/checklist/go-live).
+
 ## Admin password
 
 The admin password is never stored, only its hash:
@@ -105,6 +149,10 @@ If you run locally without a `.env` loader, set it in your shell instead:
 | `TRUST_PROXY` | Set `1` behind nginx/a PaaS so real visitor IPs are used | `0` |
 | `SHOP_TIMEZONE` | Your local time zone; decides which meets are "upcoming" today | `America/New_York` |
 | `SESSION_COOKIE_SECURE` | Set `1` when served over HTTPS | `0` |
+| `PAYMENT_PROVIDER` | `mock` or `stripe` (test mode only) | `mock` |
+| `STRIPE_SECRET_KEY` | Stripe **test** key (`rk_test_...` / `sk_test_...`). Live keys are refused | empty |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret for `/shop/stripe/webhook` (`whsec_...`) | empty (webhook off) |
+| `STRIPE_CURRENCY` | Checkout currency | `usd` |
 
 ## Project structure
 
@@ -130,7 +178,7 @@ app/
     embeds.py          turns YouTube/TikTok links into safe embed URLs (others are rejected)
     cart.py            the cart, stored in the signed session cookie (prices always re-read from the DB)
     checkout.py        create_pending_order() and fulfill_order(): codes, blind bags, fund
-    payments.py        MockPaymentProvider, and the notes for adding Stripe test mode
+    payments.py        MockPaymentProvider and StripePaymentProvider (Checkout, test mode only)
     qr.py              QR code PNGs (as data: URIs) via the `qrcode` library
     voting.py          open round, time left, results, casting votes, closing rounds
     rate_limit.py      locks out an IP after too many wrong codes
@@ -144,7 +192,8 @@ app/
   routes/              one Flask blueprint per site section
     main.py            home page
     car.py             Revival Car page (profile, totals, installs, build log)
-    shop.py            product list/detail, SVG placeholder photos, cart, checkout, confirmation
+    shop.py            product list/detail, SVG placeholder photos, cart, checkout, confirmation,
+                       Stripe return page and signed Stripe webhook
     vote.py            ballot (code + part/tier), results page, past rounds
     garage.py          Garage grid, car pages, join with a code, edit, delete
     meets.py           meet drops page + "Add to calendar" (.ics) downloads
@@ -185,11 +234,11 @@ tests/                 pytest smoke tests
   1. `create_pending_order()` copies names and prices from the database (never
      from the cookie).
   2. A payment provider is called. The mock provider reports "paid" straight
-     away; a Stripe one would redirect to Stripe and confirm later via a webhook.
+     away. The Stripe one redirects to Stripe Checkout and confirms later (see
+     "Stripe test mode" above).
   3. `fulfill_order()` does everything a sale earns in one database commit:
      codes, blind-bag reveals and the fund entry. It does nothing if the order
-     is already paid, so a webhook firing twice is harmless. The steps for
-     adding Stripe are in `app/services/payments.py`.
+     is already paid, so a webhook firing twice is harmless.
 - **Order confirmation pages are private.** They show the voting codes, so only
   the browser that placed the order can open them (remembered in its session).
   Each code also gets a QR image that links to the vote page.

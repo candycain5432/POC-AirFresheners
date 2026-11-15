@@ -22,6 +22,10 @@ def create_app(config_overrides=None):
     if config_overrides:
         app.config.update(config_overrides)
 
+    # Refuse to start with a bad payment setup (e.g. a live Stripe key).
+    from .services.payments import check_payment_config
+    check_payment_config(app)
+
     # Make sure the folders for the database and uploads exist.
     os.makedirs(app.config["UPLOAD_DIR"], exist_ok=True)
 

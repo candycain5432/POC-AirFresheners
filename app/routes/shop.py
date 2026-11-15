@@ -7,13 +7,16 @@ functions and pick a template.
 """
 import re
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
+import stripe
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
 
+from ..extensions import csrf, db
 from ..models import Product
 from ..services import cart as cart_service
-from ..services.checkout import CheckoutError, create_pending_order, find_order, fulfill_order
+from ..services.checkout import (CheckoutError, create_pending_order, find_order, fulfill_order,
+                                 mark_order_failed)
 from ..services.fund import fund_summary
-from ..services.payments import get_payment_provider
+from ..services.payments import get_payment_provider, session_pays_for_order
 from ..services.qr import qr_data_uri
 
 bp = Blueprint("shop", __name__, url_prefix="/shop")
@@ -95,12 +98,19 @@ def cart_update():
 
 
 # ---------------- Checkout ----------------
+def _remember_order(reference):
+    """Only the browser that placed an order may see its confirmation page (it shows the codes)."""
+    session["my_orders"] = (session.get("my_orders", []) + [reference])[-10:]
+
+
 @bp.route("/checkout", methods=["GET", "POST"])
 def checkout():
     lines = cart_service.get_lines()
     if not lines:
         flash("Your cart is empty.", "error")
         return redirect(url_for("shop.index"))
+    if request.method == "GET" and request.args.get("cancelled"):
+        flash("Payment cancelled. Nothing was charged, and your cart is still here.", "error")
 
     form = {"name": "", "email": ""}
     errors = {}
@@ -121,21 +131,80 @@ def checkout():
 
             provider = get_payment_provider()
             result = provider.start_payment(order)
-            if result.status == "redirect":            # e.g. Stripe Checkout, later
-                return redirect(result.redirect_url)
+            if result.status == "redirect":            # Stripe Checkout
+                # Store the session id so the return page and webhook can
+                # check that Stripe's session belongs to this order.
+                order.payment_provider = provider.name
+                order.payment_reference = result.reference
+                db.session.commit()
+                _remember_order(order.reference)
+                return redirect(result.redirect_url)   # cart is kept until payment is confirmed
             if result.status != "paid":
+                mark_order_failed(order)
                 flash(result.error or "Payment failed. Nothing was charged.", "error")
                 return redirect(url_for("shop.checkout"))
 
             fulfill_order(order, payment_reference=result.reference, provider_name=provider.name)
             cart_service.clear()
-            # Remember which orders THIS browser placed. Only they may see
-            # the confirmation page, because it shows the voting codes.
-            session["my_orders"] = (session.get("my_orders", []) + [order.reference])[-10:]
+            _remember_order(order.reference)
             return redirect(url_for("shop.order_complete", reference=order.reference))
 
     return render_template("shop/checkout.html", lines=lines, total=cart_service.total_cents(lines),
-                           form=form, errors=errors)
+                           form=form, errors=errors, provider=get_payment_provider().name)
+
+
+@bp.route("/order/<reference>/stripe-return")
+def stripe_return(reference):
+    """
+    Stripe sends the buyer here after paying. We never trust the URL: the
+    session is fetched from Stripe and must be paid, for this order, for
+    this amount. (The webhook usually got there first; that's fine.)
+    """
+    if reference not in session.get("my_orders", []):
+        abort(404)
+    order = find_order(reference)
+    session_id = request.args.get("session_id", "")
+    if order is None or order.payment_provider != "stripe" or session_id != order.payment_reference:
+        abort(404)
+
+    if order.status != "paid":
+        try:
+            checkout_session = get_payment_provider().get_session(session_id)
+        except stripe.StripeError:
+            flash("We couldn't confirm your payment with Stripe yet. Refresh this page in a moment.", "error")
+            return redirect(url_for("shop.cart"))
+        if not session_pays_for_order(checkout_session, order):
+            flash("Your payment hasn't gone through yet. If you were charged, your codes "
+                  "will appear when Stripe confirms it. Refresh this page in a moment.", "error")
+            return redirect(url_for("shop.cart"))
+        fulfill_order(order, payment_reference=session_id, provider_name="stripe")
+
+    cart_service.clear()
+    return redirect(url_for("shop.order_complete", reference=order.reference))
+
+
+@bp.route("/stripe/webhook", methods=["POST"])
+@csrf.exempt   # Stripe can't send our CSRF token; its signature is checked instead
+def stripe_webhook():
+    if current_app.config.get("PAYMENT_PROVIDER") != "stripe" or not current_app.config.get("STRIPE_WEBHOOK_SECRET"):
+        abort(404)
+    try:
+        event = get_payment_provider().parse_webhook(
+            request.get_data(), request.headers.get("Stripe-Signature", ""))
+    except (ValueError, stripe.SignatureVerificationError):
+        return "Invalid signature", 400
+
+    if event.type.startswith("checkout.session."):
+        checkout_session = event.data.object.to_dict()
+        order = find_order((checkout_session.get("metadata") or {}).get("order_reference", ""))
+        if order is not None and checkout_session.get("id") == order.payment_reference:
+            if event.type in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
+                if session_pays_for_order(checkout_session, order):
+                    fulfill_order(order, payment_reference=checkout_session.get("id"), provider_name="stripe")
+            elif event.type in ("checkout.session.async_payment_failed", "checkout.session.expired"):
+                mark_order_failed(order)
+    # Always 200 for events we don't act on, so Stripe doesn't keep retrying them.
+    return "", 200
 
 
 @bp.route("/order/<reference>")

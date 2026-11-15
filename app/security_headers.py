@@ -7,7 +7,7 @@ YouTube (privacy-enhanced domain) and TikTok. Even if some text slipped
 past escaping, the browser would refuse to run inline <script> code.
 """
 
-CSP = "; ".join([
+CSP_PARTS = [
     "default-src 'self'",
     "img-src 'self' data:",
     "style-src 'self'",
@@ -17,13 +17,20 @@ CSP = "; ".join([
     "frame-ancestors 'none'",   # nobody may put OUR site in a frame (clickjacking)
     "base-uri 'self'",
     "object-src 'none'",
-])
+]
+CSP = "; ".join(CSP_PARTS)
+
+# With Stripe test mode on, the checkout form's response redirects to
+# Stripe's hosted page, and browsers apply form-action to that redirect too.
+STRIPE_CSP = CSP.replace("form-action 'self'", "form-action 'self' https://checkout.stripe.com")
 
 
 def register_security_headers(app):
+    csp = STRIPE_CSP if app.config.get("PAYMENT_PROVIDER") == "stripe" else CSP
+
     @app.after_request
     def add_headers(response):
-        response.headers.setdefault("Content-Security-Policy", CSP)
+        response.headers.setdefault("Content-Security-Policy", csp)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("X-Frame-Options", "DENY")

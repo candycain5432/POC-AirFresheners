@@ -2,8 +2,8 @@
 The shop: products, mock orders and blind-bag scents.
 
 Prices are stored in cents. A mock order is recorded exactly like a real
-one would be, with `payment_provider = "mock"`, so a Stripe provider can be
-added later without changing these tables much.
+one would be, with `payment_provider = "mock"`; a Stripe test-mode order has
+`payment_provider = "stripe"` and its Checkout Session id as the reference.
 """
 from ..extensions import db
 from ._common import utcnow
@@ -51,7 +51,7 @@ class Order(db.Model):
     total_cents = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), nullable=False, default="paid")  # pending / paid / failed
     payment_provider = db.Column(db.String(20), nullable=False, default="mock")
-    payment_reference = db.Column(db.String(120), default="")  # e.g. a Stripe PaymentIntent id later
+    payment_reference = db.Column(db.String(120), default="")  # e.g. a Stripe Checkout Session id (cs_test_...)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     items = db.relationship("OrderItem", backref="order", cascade="all, delete-orphan")
