@@ -35,6 +35,10 @@ class Config:
     #   flask --app app hash-password
     ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
 
+    # Which payment provider checkout uses. Only "mock" exists for now;
+    # see app/services/payments.py for how to add Stripe test mode.
+    PAYMENT_PROVIDER = os.environ.get("PAYMENT_PROVIDER", "mock")
+
     # Code-guessing protection: this many wrong codes from one IP within the
     # window locks that IP out of code entry until the window passes.
     CODE_ATTEMPT_LIMIT = int(os.environ.get("CODE_ATTEMPT_LIMIT", "10"))

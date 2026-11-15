@@ -1,5 +1,6 @@
 """Friendly error pages that keep the site's look."""
 from flask import render_template
+from flask_wtf.csrf import CSRFError
 
 
 def register_error_handlers(app):
@@ -7,6 +8,12 @@ def register_error_handlers(app):
     def not_found(error):
         return render_template("error.html", code=404, title="Part not found",
                                message="That page isn't on the shelf. Maybe it's still in the junkyard."), 404
+
+    @app.errorhandler(CSRFError)
+    def csrf_failed(error):
+        return render_template("error.html", code=400, title="Form expired",
+                               message="That form was open too long or came from somewhere else. "
+                                       "Go back, refresh the page and try again."), 400
 
     @app.errorhandler(413)
     def too_large(error):

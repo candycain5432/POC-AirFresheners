@@ -15,7 +15,7 @@ plain CSS and a little vanilla JS. No frontend framework.
 |---|---|---|
 | 1 | Project skeleton, database models, seed data | ✅ done |
 | 2 | Home page and Revival Car page | ✅ done |
-| 3 | Shop and mock checkout with code generation | ⏳ |
+| 3 | Shop and mock checkout with code generation | ✅ done |
 | 4 | Voting | ⏳ |
 | 5 | The Garage | ⏳ |
 | 6 | Meet drops | ⏳ |
@@ -93,9 +93,14 @@ app/
     codes.py           secure code generation and lookup
     fund.py            raised / spent / on hand, and progress toward the current goal
     embeds.py          turns YouTube/TikTok links into safe embed URLs (others are rejected)
+    cart.py            the cart, stored in the signed session cookie (prices always re-read from the DB)
+    checkout.py        create_pending_order() and fulfill_order(): codes, blind bags, fund
+    payments.py        MockPaymentProvider, and the notes for adding Stripe test mode
+    qr.py              QR code PNGs (as data: URIs) via the `qrcode` library
   routes/              one Flask blueprint per site section
     main.py            home page
     car.py             Revival Car page (profile, totals, installs, build log)
+    shop.py            product list/detail, SVG placeholder photos, cart, checkout, confirmation
     errors.py          friendly 404 / 413 / 500 pages
   templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
   static/css/style.css the whole look: mobile-first, dark garage theme, no framework
@@ -124,6 +129,18 @@ tests/                 pytest smoke tests
   Shorts and TikToks are shown in a vertical frame.
 - **Content-Security-Policy** allows scripts and styles from this site only, and
   frames only from YouTube/TikTok. There is no inline JavaScript anywhere.
+- **Checkout runs in two steps**, so a real payment provider can slot in later:
+  1. `create_pending_order()` copies names and prices from the database (never
+     from the cookie).
+  2. A payment provider is called. The mock provider reports "paid" straight
+     away; a Stripe one would redirect to Stripe and confirm later via a webhook.
+  3. `fulfill_order()` does everything a sale earns in one database commit:
+     codes, blind-bag reveals and the fund entry. It does nothing if the order
+     is already paid, so a webhook firing twice is harmless. The steps for
+     adding Stripe are in `app/services/payments.py`.
+- **Order confirmation pages are private.** They show the voting codes, so only
+  the browser that placed the order can open them (remembered in its session).
+  Each code also gets a QR image that links to the vote page.
 - **Rate limiting** records wrong code guesses per IP in the database, so it
   works across several server processes.
 

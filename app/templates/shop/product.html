@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block description %}{{ product.scent_description }}{% endblock %}
+{% block content %}
+<section class="wrap page-section">
+  <p class="breadcrumb"><a href="{{ url_for('shop.index') }}">Shop</a> / {{ product.name }}</p>
+  <div class="product-detail">
+    <div class="product-photo">
+      <img src="{{ url_for('shop.product_image', slug=product.slug) }}" alt="{{ product.name }} (placeholder photo)" width="400" height="400">
+      {% if product.sold_out %}<span class="stamp stamp-sold-out">Sold out</span>{% endif %}
+    </div>
+    <div>
+      <h1 class="page-title">{{ product.name }}</h1>
+      <p class="price-tag price-tag-large">{{ product.price_cents | money(false) }}</p>
+      <p>{{ product.scent_description }}</p>
+      <ul class="spec-list">
+        <li>{{ product.fresheners_per_unit }} freshener{{ 's' if product.fresheners_per_unit > 1 }}
+            = {{ product.fresheners_per_unit }} vote code{{ 's' if product.fresheners_per_unit > 1 }}</li>
+        {% if product.kind == 'blind' %}<li>About 1 in 10 is a rare chase scent. Revealed when your order completes.</li>{% endif %}
+        {% if product.kind == 'meet' %}<li><a href="{{ url_for('meets.index') }}">See meet drops</a></li>{% endif %}
+        <li>100% of the price goes into the Revival Car fund</li>
+      </ul>
+
+      {% if product.sold_out %}
+        <p class="stamp stamp-sold-out">Sold out</p>
+      {% else %}
+        <form method="post" action="{{ url_for('shop.cart_add') }}" class="buy-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="slug" value="{{ product.slug }}">
+          {% if product.kind == 'custom' %}
+            <div class="field">
+              <label for="note">Describe your car</label>
+              <textarea id="note" name="note" rows="3" maxlength="{{ max_note }}" required
+                        placeholder="e.g. Lifted 90s pickup, forest green, roof rack"></textarea>
+              <p class="field-hint">Body style, colour, anything that makes it yours. We'll send a proof (no brand logos, sorry).</p>
+            </div>
+          {% endif %}
+          <div class="field field-inline">
+            <label for="qty">Qty</label>
+            <select id="qty" name="qty">
+              {% for n in range(1, max_qty + 1) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
+            </select>
+          </div>
+          <button class="btn" type="submit">Add to cart</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

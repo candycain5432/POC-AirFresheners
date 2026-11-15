@@ -27,6 +27,10 @@
         </svg>
         <span class="logo-text">Rust <span class="amp">&amp;</span> Revival</span>
       </a>
+      {# Cart link sits outside the menu so it's always one tap away on phones. #}
+      <a class="cart-link" href="{{ url_for('shop.cart') }}">
+        Cart{% if cart_count %} <span class="cart-badge">{{ cart_count }}</span><span class="visually-hidden"> items</span>{% endif %}
+      </a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
         <span class="nav-toggle-bars" aria-hidden="true"></span>
         <span class="visually-hidden">Menu</span>

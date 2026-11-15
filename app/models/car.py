@@ -100,3 +100,5 @@ class FundEntry(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"))
     note = db.Column(db.String(200), default="")
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
+
+    order = db.relationship("Order")

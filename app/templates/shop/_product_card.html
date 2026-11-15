@@ -1,0 +1,28 @@
+{# One product card. Included by shop/index.html with `p` set. #}
+<article class="product-card {{ 'is-sold-out' if p.sold_out }}">
+  <a class="product-photo" href="{{ url_for('shop.product', slug=p.slug) }}">
+    <img src="{{ url_for('shop.product_image', slug=p.slug) }}" alt="{{ p.name }} (placeholder photo)"
+         width="400" height="400" loading="lazy">
+    {% if p.sold_out %}<span class="stamp stamp-sold-out">Sold out</span>{% endif %}
+  </a>
+  <div class="product-body">
+    <h3><a href="{{ url_for('shop.product', slug=p.slug) }}">{{ p.name }}</a></h3>
+    <p class="product-desc">{{ p.scent_description }}</p>
+    <div class="product-buy">
+      <span class="price-tag">{{ p.price_cents | money(false) }}</span>
+      {% if p.fresheners_per_unit > 1 %}<span class="muted small">{{ p.fresheners_per_unit }} codes</span>{% endif %}
+      {% if p.sold_out %}
+        <span class="muted small">Gone for good</span>
+      {% elif p.kind == 'custom' %}
+        <a class="btn btn-small" href="{{ url_for('shop.product', slug=p.slug) }}">Customise</a>
+      {% else %}
+        <form method="post" action="{{ url_for('shop.cart_add') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="slug" value="{{ p.slug }}">
+          <input type="hidden" name="qty" value="1">
+          <button class="btn btn-small" type="submit">Add to cart</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</article>

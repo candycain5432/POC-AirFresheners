@@ -37,4 +37,5 @@ def register_template_helpers(app):
     @app.context_processor
     def inject_globals():
         # Variables every template can use without passing them in.
-        return {"current_year": datetime.now(timezone.utc).year}
+        from .services.cart import item_count
+        return {"current_year": datetime.now(timezone.utc).year, "cart_count": item_count()}

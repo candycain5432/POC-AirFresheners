@@ -4,6 +4,7 @@
   1. Marks <html> with class "js" so CSS knows scripts are running.
   2. Mobile menu toggle.
   3. Click-to-load install videos (no YouTube/TikTok requests until tapped).
+  4. Cart quantity dropdowns submit as soon as they change.
 */
 document.documentElement.classList.add("js");
 
@@ -36,6 +37,14 @@ document.addEventListener("DOMContentLoaded", function () {
       iframe.allowFullscreen = true;
       iframe.referrerPolicy = "strict-origin-when-cross-origin";
       frame.replaceChildren(iframe);
+    });
+  });
+
+  // ----- 4. Auto-submit cart quantity -----
+  // Without JS the "Update" button does the same job (CSS hides it when JS runs).
+  document.querySelectorAll("select.js-autosubmit").forEach(function (select) {
+    select.addEventListener("change", function () {
+      select.form.submit();
     });
   });
 });
