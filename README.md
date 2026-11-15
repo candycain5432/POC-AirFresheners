@@ -151,14 +151,22 @@ tests/                 pytest smoke tests
 
 ## Design notes
 
-- **Colours:** dark warm neutrals with one accent, rust orange. Hazard yellow
-  appears only in tiny doses (the footer strip, chase reveals, meet badges).
-- **Hierarchy comes from spacing and type**, not borders: few boxes, few lines.
-- **Fonts:** Barlow Condensed for headings and Barlow for text. Both are stored
-  in `app/static/fonts/`, so no outside requests are made. Capitals are used
-  only for small labels (`.eyebrow`).
-- **Brand details are kept small:** paper part tags for tiers, and paper "work
-  order" tickets for the cart and receipt.
+The look is a clean vintage race program:
+
+- **Colours:** an off-white page (`#f4f1ea`), near-black ink and one accent,
+  racing red (`#d42a1f`). All colours are CSS variables at the top of
+  `style.css`.
+- **Checkered flags are the signature detail:** a thin band at the top of the
+  header, a "finish line" band on the black footer, a small flag at the end of
+  every progress bar, and a checkered edge on a chase blind-bag reveal. They are
+  drawn in CSS (`--checker`), with no image files.
+- **Race touches are small:** a short red "livery stripe" before small labels,
+  race-number roundels for the "How it works" steps, and outlined tier tags.
+- **Hierarchy comes from spacing and type**, not borders: white cards with
+  hairline edges, lots of room.
+- **Fonts:** Barlow Condensed for headings and Barlow for text, both stored in
+  `app/static/fonts/`, so no outside requests are made. Capitals are used only
+  for small labels.
 - **No inline styles or scripts**, which keeps the strict Content-Security-Policy
   working.
 

@@ -17,8 +17,12 @@
       {% endif %}
     </p>
     {# A native <progress> element: screen readers announce it correctly. #}
-    <progress class="gauge" max="{{ fund.goal.goal_cents }}" value="{{ fund.toward_goal }}"
-              aria-label="Funding progress for {{ fund.goal.part_name }}">{{ fund.percent }}%</progress>
+    <div class="gauge-track">
+      <progress class="gauge" max="{{ fund.goal.goal_cents }}" value="{{ fund.toward_goal }}"
+                aria-label="Funding progress for {{ fund.goal.part_name }}">{{ fund.percent }}%</progress>
+      {# The checkered "finish line" at the end of the bar. #}
+      <span class="gauge-finish" aria-hidden="true"></span>
+    </div>
     <p class="progress-figures">
       <span><strong>{{ fund.toward_goal | money(false) }}</strong> raised of {{ fund.goal.goal_cents | money(false) }}</span>
       <span>{{ fund.percent }}%</span>

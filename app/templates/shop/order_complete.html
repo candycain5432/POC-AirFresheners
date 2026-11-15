@@ -5,7 +5,7 @@
   <p class="eyebrow">Order {{ order.reference }}<span class="dot">·</span>Mock payment</p>
   <h1 class="page-title">You're in the build, {{ order.customer_name }}!</h1>
   <p class="lead">Your {{ order.total_cents | money }} just went into the Revival Car fund.
-    {% if fund.goal and not fund.funded %}Now <strong class="rust">{{ fund.remaining | money(false) }} to go</strong> for the {{ fund.goal.part_name | lower }}.
+    {% if fund.goal and not fund.funded %}Now <strong class="accent">{{ fund.remaining | money(false) }} to go</strong> for the {{ fund.goal.part_name | lower }}.
     {% elif fund.goal %}The {{ fund.goal.part_name | lower }} are fully funded!{% endif %}</p>
 
   {# ----- Blind bag reveals ----- #}

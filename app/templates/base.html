@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Rust &amp; Revival{% endblock %} · Rust &amp; Revival</title>
   <meta name="description" content="{% block description %}Handmade car air fresheners. Every sale helps bring a dead car back to life.{% endblock %}">
-  <meta name="theme-color" content="#141210">
+  <meta name="theme-color" content="#f4f1ea">
   {# Preload the two fonts every page uses, so text appears in the right font sooner. #}
   <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-condensed-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
@@ -21,6 +21,7 @@
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
+    <div class="checker-strip" aria-hidden="true"></div>
     <div class="wrap header-row">
       <a class="logo" href="{{ url_for('main.home') }}" aria-label="Rust and Revival home">
         {# Simple hex-bolt mark drawn in SVG: no carmaker logos anywhere. #}
@@ -73,7 +74,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="hazard-strip" aria-hidden="true"></div>
+    <div class="checker-strip" aria-hidden="true"></div>
     <div class="wrap footer-row">
       <p class="poc-note">Proof of concept: no real purchases are processed.</p>
       <p class="muted">Handmade aroma-bead fresheners. Every sale funds the Revival Car.</p>

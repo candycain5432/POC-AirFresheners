@@ -9,7 +9,7 @@
   <div class="wrap hero-grid">
     <div>
       <p class="eyebrow">Handmade car fresheners</p>
-      <h1 class="hero-title">Every freshener helps bring a <span class="rust">dead car</span> back to life.</h1>
+      <h1 class="hero-title">Every freshener helps bring a <span class="accent">dead car</span> back to life.</h1>
       <p class="hero-sub">
         {% if car %}We're rebuilding {{ car.nickname }}, a {{ car.description | lower }}, in public.{% endif %}
         Buy a freshener, vote on the next part, and watch it go in.
@@ -21,7 +21,7 @@
     </div>
     <div>
       {{ progress_bar(fund) }}
-      <a class="card-link" href="{{ url_for('car.index') }}">Follow the build</a>
+      <a class="text-link" href="{{ url_for('car.index') }}">Follow the build</a>
     </div>
   </div>
 </section>
@@ -52,7 +52,7 @@
         <span>{{ latest_install.installed_on | nice_date }}</span>
       </p>
       {% if latest_install.notes %}<p>{{ latest_install.notes }}</p>{% endif %}
-      <a class="card-link" href="{{ url_for('car.index') }}#install-{{ latest_install.id }}">See every install</a>
+      <a class="text-link" href="{{ url_for('car.index') }}#install-{{ latest_install.id }}">See every install</a>
     </div>
   </div>
 </section>
@@ -96,7 +96,7 @@
         <h3>{{ member.car_name }}</h3>
         <p class="muted">Owned by {{ member.owner_name }}</p>
         <p>{{ car_of_month.blurb }}</p>
-        <a class="card-link" href="{{ url_for('garage.index') }}">Visit the Garage</a>
+        <a class="text-link" href="{{ url_for('garage.index') }}">Visit the Garage</a>
       </div>
     </article>
   </section>
