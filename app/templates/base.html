@@ -10,6 +10,9 @@
   <title>{% block title %}Rust &amp; Revival{% endblock %} · Rust &amp; Revival</title>
   <meta name="description" content="{% block description %}Handmade car air fresheners. Every sale helps bring a dead car back to life.{% endblock %}">
   <meta name="theme-color" content="#141210">
+  {# Preload the two fonts every page uses, so text appears in the right font sooner. #}
+  <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-condensed-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {# Not deferred: it must add the "js" class before the page draws. Its other work waits for DOMContentLoaded. #}
   <script src="{{ url_for('static', filename='js/site.js') }}"></script>
@@ -72,8 +75,9 @@
   <footer class="site-footer">
     <div class="hazard-strip" aria-hidden="true"></div>
     <div class="wrap footer-row">
-      <p class="poc-note"><strong>Proof of concept: no real purchases are processed.</strong></p>
-      <p class="muted">Handmade aroma-bead fresheners · Every sale funds the Revival Car · © {{ current_year }} Rust &amp; Revival</p>
+      <p class="poc-note">Proof of concept: no real purchases are processed.</p>
+      <p class="muted">Handmade aroma-bead fresheners. Every sale funds the Revival Car.</p>
+      <p class="muted">© {{ current_year }} Rust &amp; Revival</p>
     </div>
   </footer>
 </body>

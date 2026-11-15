@@ -170,7 +170,7 @@ def seed_products(meets):
          20, 3, "#d98236"),
         ("custom-car-freshie", "Custom Car Freshie", "custom",
          "Hand-cut in the shape of YOUR car, painted to match, in the scent of your choice. "
-         "Tell us about your car at checkout and we'll send a proof.", 14, 1, "#5c7a3a"),
+         "Describe your car when you order and we'll send a proof.", 14, 1, "#5c7a3a"),
         ("blind-bag-chase", "Blind Bag Chase", "blind",
          "Mystery scent in a sealed parts bag. About 1 in 10 is a rare chase freshener. "
          "Revealed the moment your order completes.", 6, 1, "#444038"),

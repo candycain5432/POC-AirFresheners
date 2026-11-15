@@ -4,97 +4,99 @@
 {% block title %}Handmade car fresheners{% endblock %}
 
 {% block content %}
-{# ---------- Hero ---------- #}
+{# ---------- Hero: the pitch on the left, live progress on the right ---------- #}
 <section class="hero">
-  <div class="wrap">
-    <p class="eyebrow">Handmade aroma-bead car fresheners</p>
-    <h1 class="hero-title">Every freshener helps bring a <span class="rust">dead car</span> back to life.</h1>
-    <p class="hero-sub">
-      {% if car %}We're rebuilding <strong>{{ car.nickname }}</strong>, a {{ car.description | lower }}, in public. {% endif %}
-      Buy a freshener, get a code, vote on the next part. We install it and film every wrench turn.
-    </p>
-    <div class="hero-actions">
-      <a class="btn" href="{{ url_for('shop.index') }}">Shop fresheners</a>
-      <a class="btn btn-ghost" href="{{ url_for('vote.index') }}">Vote on the next part</a>
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Handmade car fresheners</p>
+      <h1 class="hero-title">Every freshener helps bring a <span class="rust">dead car</span> back to life.</h1>
+      <p class="hero-sub">
+        {% if car %}We're rebuilding {{ car.nickname }}, a {{ car.description | lower }}, in public.{% endif %}
+        Buy a freshener, vote on the next part, and watch it go in.
+      </p>
+      <div class="hero-actions">
+        <a class="btn" href="{{ url_for('shop.index') }}">Shop fresheners</a>
+        <a class="btn btn-ghost" href="{{ url_for('vote.index') }}">Vote on the next part</a>
+      </div>
     </div>
-  </div>
-</section>
-
-{# ---------- Progress bar ---------- #}
-<section class="wrap page-section">
-  {{ progress_bar(fund) }}
-  <p class="section-link"><a href="{{ url_for('car.index') }}">See the full build log →</a></p>
-</section>
-
-{# ---------- Three quick links: vote, shop, latest install ---------- #}
-<section class="wrap page-section">
-  <h2 class="section-title">On the bench</h2>
-  <div class="card-grid">
-    <article class="card">
-      <p class="stamp">Vote open</p>
-      {% if open_round %}
-        <h3>{{ open_round.title }}</h3>
-        <p>{{ open_round.description }}</p>
-        <p class="muted">{{ open_round.options | length }} parts on the ballot · 1 vote per freshener code</p>
-        <a class="btn btn-small" href="{{ url_for('vote.index') }}">Cast your vote</a>
-      {% else %}
-        <h3>No vote right now</h3>
-        <p>The next round opens after the current part is installed.</p>
-        <a class="btn btn-small btn-ghost" href="{{ url_for('vote.index') }}">Past results</a>
-      {% endif %}
-    </article>
-
-    <article class="card">
-      <p class="stamp">Shop</p>
-      <h3>Freshies from $6</h3>
-      <p>Regular scents, 3-pack bundles, custom shapes of your own car, meet exclusives, and blind-bag chase fresheners.</p>
-      <p class="muted">Each freshener comes with its own vote code.</p>
-      <a class="btn btn-small" href="{{ url_for('shop.index') }}">Browse the shelf</a>
-    </article>
-
-    <article class="card card-video">
-      <p class="stamp">Latest install</p>
-      {% if latest_install %}
-        <h3>{{ latest_install.part_name }}</h3>
-        <p class="muted">
-          <span class="part-tag part-tag-small">{{ latest_install.tier | tier_label }}</span>
-          {{ latest_install.cost_cents | money(false) }} · {{ latest_install.installed_on | nice_date }}
-        </p>
-        {{ install_video(latest_install) }}
-      {% else %}
-        <h3>First install coming soon</h3>
-      {% endif %}
-    </article>
+    <div>
+      {{ progress_bar(fund) }}
+      <a class="card-link" href="{{ url_for('car.index') }}">Follow the build</a>
+    </div>
   </div>
 </section>
 
 {# ---------- How it works ---------- #}
 <section class="wrap page-section">
-  <h2 class="section-title">How it works</h2>
+  <p class="eyebrow">How it works</p>
+  <h2 class="section-title">You fund it. You pick it. We fit it.</h2>
   <ol class="steps">
-    <li><span class="step-num">01</span><strong>Buy a freshener.</strong> Hand-poured aroma beads, made in our garage.</li>
-    <li><span class="step-num">02</span><strong>Get your code.</strong> Every freshener carries a unique code.</li>
-    <li><span class="step-num">03</span><strong>Vote on the next part.</strong> Pick the part and the budget.</li>
-    <li><span class="step-num">04</span><strong>Watch it go in.</strong> Every install is filmed and posted.</li>
+    <li><span class="step-num">01</span><strong>Buy a freshener</strong>Hand-poured aroma beads, made in our garage.</li>
+    <li><span class="step-num">02</span><strong>Get your code</strong>Every freshener carries its own unique code.</li>
+    <li><span class="step-num">03</span><strong>Vote on the next part</strong>Pick the part and the budget it gets.</li>
+    <li><span class="step-num">04</span><strong>Watch it go in</strong>Every install is filmed and posted.</li>
   </ol>
+</section>
+
+{# ---------- Latest install ---------- #}
+{% if latest_install %}
+<section class="wrap page-section">
+  <p class="eyebrow">Latest install</p>
+  <div class="feature">
+    <div>{{ install_video(latest_install) }}</div>
+    <div>
+      <h3>{{ latest_install.part_name }}</h3>
+      <p class="feature-meta">
+        <span class="part-tag">{{ latest_install.tier | tier_label }}</span>
+        <span>{{ latest_install.cost_cents | money(false) }}</span>
+        <span>{{ latest_install.installed_on | nice_date }}</span>
+      </p>
+      {% if latest_install.notes %}<p>{{ latest_install.notes }}</p>{% endif %}
+      <a class="card-link" href="{{ url_for('car.index') }}#install-{{ latest_install.id }}">See every install</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ---------- Vote + shop ---------- #}
+<section class="wrap page-section">
+  <div class="card-grid">
+    <a class="card" href="{{ url_for('vote.index') }}">
+      <p class="eyebrow">{{ 'Vote open' if open_round else 'Voting' }}</p>
+      {% if open_round %}
+        <h3>{{ open_round.title }}</h3>
+        <p>{{ open_round.description }}</p>
+        <span class="card-cta">Cast your vote</span>
+      {% else %}
+        <h3>No vote right now</h3>
+        <p>The next round opens after the current part is installed.</p>
+        <span class="card-cta">See past results</span>
+      {% endif %}
+    </a>
+    <a class="card" href="{{ url_for('shop.index') }}">
+      <p class="eyebrow">Shop</p>
+      <h3>Fresheners from $6</h3>
+      <p>Signature scents, 3-packs, custom fresheners shaped like your car, meet exclusives and blind bags.</p>
+      <span class="card-cta">Browse the shop</span>
+    </a>
+  </div>
 </section>
 
 {# ---------- Car of the Month ---------- #}
 {% if car_of_month %}
   {% set member = car_of_month.member %}
   <section class="wrap page-section">
-    <h2 class="section-title">Car of the Month</h2>
     <article class="feature-car">
       {% if member.photo_filename %}
         <img src="{{ url_for('uploads.uploaded_file', filename=member.photo_filename) }}"
              alt="{{ member.car_name }}, owned by {{ member.owner_name }}" loading="lazy" width="960" height="720">
       {% endif %}
-      <div class="feature-car-body">
-        <span class="part-tag">{{ car_of_month.month }}</span>
+      <div>
+        <p class="eyebrow">Car of the Month<span class="dot">·</span>{{ car_of_month.month }}</p>
         <h3>{{ member.car_name }}</h3>
         <p class="muted">Owned by {{ member.owner_name }}</p>
         <p>{{ car_of_month.blurb }}</p>
-        <a class="btn btn-small btn-ghost" href="{{ url_for('garage.index') }}">Visit the Garage</a>
+        <a class="card-link" href="{{ url_for('garage.index') }}">Visit the Garage</a>
       </div>
     </article>
   </section>

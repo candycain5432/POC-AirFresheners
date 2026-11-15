@@ -18,13 +18,12 @@ from ..services.qr import qr_data_uri
 
 bp = Blueprint("shop", __name__, url_prefix="/shop")
 
-# Sections of the shop page, in display order.
+# Sections of the shop page, in display order: (anchor id, title, blurb, product kinds).
 SECTIONS = [
-    ("regular", "Fresheners", "Hand-poured aroma beads. $8 each, one code each."),
-    ("bundle", "Bundles", "More scents, more votes."),
-    ("custom", "Custom", "Your car, as a freshener."),
-    ("blind", "Blind bags", "Mystery scent. Chase the rare ones."),
-    ("meet", "Meet exclusives", "Made for one meet only. When they're gone, they're gone."),
+    ("fresheners", "Fresheners", "Hand-poured aroma beads. $8 each, one code each.", ("regular",)),
+    ("more", "More ways to buy", "Bundles for more votes, a freshener shaped like your car, or a mystery blind bag.",
+     ("bundle", "custom", "blind")),
+    ("meet", "Meet exclusives", "Made for one meet only. When they're gone, they're gone.", ("meet",)),
 ]
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -42,8 +41,11 @@ def _int_field(name, default=0):
 @bp.route("/")
 def index():
     products = Product.query.filter_by(is_active=True).order_by(Product.position).all()
-    sections = [(kind, title, blurb, [p for p in products if p.kind == kind])
-                for kind, title, blurb in SECTIONS]
+    sections = []
+    for anchor, title, blurb, kinds in SECTIONS:
+        items = [p for p in products if p.kind in kinds]
+        items.sort(key=lambda p: p.sold_out)   # available first; sort() keeps the order otherwise
+        sections.append((anchor, title, blurb, items))
     return render_template("shop/index.html", sections=sections)
 
 

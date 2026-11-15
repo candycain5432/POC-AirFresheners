@@ -108,6 +108,7 @@ app/
     errors.py          friendly 404 / 413 / 500 pages
   templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
   static/css/style.css the whole look: mobile-first, dark garage theme, no framework
+  static/fonts/        Barlow + Barlow Condensed (self-hosted, SIL Open Font License)
   static/js/site.js    mobile menu + click-to-load videos (pages work without it)
 seed.py                sample data (WIPES the database)
 seed_images.py         draws placeholder photos with Pillow
@@ -147,6 +148,19 @@ tests/                 pytest smoke tests
   Each code also gets a QR image that links to the vote page.
 - **Rate limiting** records wrong code guesses per IP in the database, so it
   works across several server processes.
+
+## Design notes
+
+- **Colours:** dark warm neutrals with one accent, rust orange. Hazard yellow
+  appears only in tiny doses (the footer strip, chase reveals, meet badges).
+- **Hierarchy comes from spacing and type**, not borders: few boxes, few lines.
+- **Fonts:** Barlow Condensed for headings and Barlow for text. Both are stored
+  in `app/static/fonts/`, so no outside requests are made. Capitals are used
+  only for small labels (`.eyebrow`).
+- **Brand details are kept small:** paper part tags for tiers, and paper "work
+  order" tickets for the cart and receipt.
+- **No inline styles or scripts**, which keeps the strict Content-Security-Policy
+  working.
 
 ## Sample data
 

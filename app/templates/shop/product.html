@@ -11,7 +11,7 @@
     </div>
     <div>
       <h1 class="page-title">{{ product.name }}</h1>
-      <p class="price-tag price-tag-large">{{ product.price_cents | money(false) }}</p>
+      <p class="price-large">{{ product.price_cents | money(false) }}</p>
       <p>{{ product.scent_description }}</p>
       <ul class="spec-list">
         <li>{{ product.fresheners_per_unit }} freshener{{ 's' if product.fresheners_per_unit > 1 }}
@@ -22,7 +22,7 @@
       </ul>
 
       {% if product.sold_out %}
-        <p class="stamp stamp-sold-out">Sold out</p>
+        <p class="muted">Sold out. This one is gone for good.</p>
       {% else %}
         <form method="post" action="{{ url_for('shop.cart_add') }}" class="buy-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -35,13 +35,13 @@
               <p class="field-hint">Body style, colour, anything that makes it yours. We'll send a proof (no brand logos, sorry).</p>
             </div>
           {% endif %}
-          <div class="field field-inline">
-            <label for="qty">Qty</label>
+          <div class="buy-row">
+            <label class="visually-hidden" for="qty">Quantity</label>
             <select id="qty" name="qty">
               {% for n in range(1, max_qty + 1) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}
             </select>
+            <button class="btn" type="submit">Add to cart</button>
           </div>
-          <button class="btn" type="submit">Add to cart</button>
         </form>
       {% endif %}
     </div>
