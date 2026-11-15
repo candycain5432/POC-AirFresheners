@@ -1,0 +1,26 @@
+{#
+  Car of the Month feature, used on the home page and the Garage page.
+    {% from "partials/car_of_month.html" import car_of_month_feature %}
+    {{ car_of_month_feature(car_of_month, link_to_garage=True) }}
+#}
+{% from "partials/car_photo.html" import car_photo %}
+{% macro car_of_month_feature(cotm, link_to_garage=True) %}
+  {% set member = cotm.member %}
+  <article class="feature-car">
+    <a class="feature-car-photo" href="{{ url_for('garage.car', member_id=member.id) }}">{{ car_photo(member) }}</a>
+    <div>
+      <div class="tag-row">
+        <span class="eyebrow tag-accent">Car of the Month</span>
+        <span class="part-tag">{{ cotm.month }}</span>
+      </div>
+      <h3>{{ member.car_name }}</h3>
+      <p class="muted">Owned by {{ member.owner_name }}</p>
+      {% if cotm.blurb %}<p>{{ cotm.blurb }}</p>{% endif %}
+      {% if link_to_garage %}
+        <a class="text-link" href="{{ url_for('garage.index') }}">Visit the Garage</a>
+      {% else %}
+        <a class="text-link" href="{{ url_for('garage.car', member_id=member.id) }}">See the car</a>
+      {% endif %}
+    </div>
+  </article>
+{% endmacro %}

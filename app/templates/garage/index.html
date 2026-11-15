@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "partials/car_photo.html" import car_photo %}
+{% from "partials/car_of_month.html" import car_of_month_feature %}
+{% block title %}The Garage{% endblock %}
+{% block description %}Cars from the Salvage &amp; Scent community. Add yours with a freshener code.{% endblock %}
+
+{% block content %}
+<section class="wrap page-section">
+  <div class="section-head section-head-row">
+    <div>
+      <p class="eyebrow">The Garage</p>
+      <h1 class="page-title">Your cars, parked together</h1>
+      <p class="lead">Every freshener code can put one car in the Garage. No account, no password: your code is your key.</p>
+    </div>
+  </div>
+  <div class="garage-actions">
+    {% if my_member %}
+      <a class="btn" href="{{ url_for('garage.edit') }}">Edit {{ my_member.car_name }}</a>
+      <a class="btn btn-ghost" href="{{ url_for('garage.car', member_id=my_member.id) }}">View my car</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('garage.join') }}">Add your car</a>
+      <a class="btn btn-ghost" href="{{ url_for('shop.index') }}">Get a code</a>
+    {% endif %}
+  </div>
+</section>
+
+{% if car_of_month %}
+<section class="wrap page-section">
+  {{ car_of_month_feature(car_of_month, link_to_garage=False) }}
+</section>
+{% endif %}
+
+<section class="wrap page-section">
+  <div class="section-head"><h2 class="section-title">In the Garage <span class="count">{{ members.total }}</span></h2></div>
+  {% if members.items %}
+    <ul class="garage-grid">
+      {% for m in members.items %}
+        <li>
+          <a class="garage-card" href="{{ url_for('garage.car', member_id=m.id) }}">
+            {{ car_photo(m) }}
+            <span class="garage-card-name">{{ m.car_name }}</span>
+            <span class="garage-card-owner">{{ m.owner_name }}</span>
+            {% if m.description %}<span class="garage-card-desc">{{ m.description }}</span>{% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if members.pages > 1 %}
+      <nav class="pager" aria-label="Garage pages">
+        {% if members.has_prev %}<a class="btn btn-ghost btn-small" href="{{ url_for('garage.index', page=members.prev_num) }}">← Newer</a>{% endif %}
+        <span class="muted">Page {{ members.page }} of {{ members.pages }}</span>
+        {% if members.has_next %}<a class="btn btn-ghost btn-small" href="{{ url_for('garage.index', page=members.next_num) }}">Older →</a>{% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <p class="muted">The Garage is empty. Be the first to park here.</p>
+  {% endif %}
+</section>
+{% endblock %}

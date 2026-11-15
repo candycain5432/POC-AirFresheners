@@ -7,6 +7,7 @@
   4. Cart quantity dropdowns submit as soon as they change.
   5. Vote countdown: ticks every second until the round's close time.
   6. Before / Now comparison slider on the Revival Car page.
+  7. "Are you sure?" for forms marked data-confirm (e.g. deleting a Garage car).
 */
 document.documentElement.classList.add("js");
 
@@ -95,5 +96,12 @@ document.addEventListener("DOMContentLoaded", function () {
     range.addEventListener("input", update);
     update();
     compare.classList.add("is-ready");
+  });
+
+  // ----- 7. Confirm before destructive actions -----
+  document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+    });
   });
 });

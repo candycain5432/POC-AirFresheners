@@ -1,0 +1,19 @@
+{#
+  A member's car photo, or a simple drawn placeholder if they haven't added one.
+    {% from "partials/car_photo.html" import car_photo %}
+    {{ car_photo(member, lazy=True) }}
+#}
+{% macro car_photo(member, lazy=True) %}
+  {% if member.photo_filename %}
+    <img class="car-photo" src="{{ url_for('uploads.uploaded_file', filename=member.photo_filename) }}"
+         alt="{{ member.car_name }}, owned by {{ member.owner_name }}" width="960" height="720"
+         {% if lazy %}loading="lazy"{% endif %}>
+  {% else %}
+    <div class="car-photo car-photo-empty" role="img" aria-label="{{ member.car_name }} (no photo yet)">
+      <svg viewBox="0 0 64 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 22v-6l6-2 8-7h22l9 7h7a4 4 0 0 1 4 4v4h-4"/><path d="M14 22h28"/><circle cx="10" cy="22" r="4"/><circle cx="46" cy="22" r="4"/><path d="M20 8v6M33 7v7M14 14h41"/>
+      </svg>
+      <span>No photo yet</span>
+    </div>
+  {% endif %}
+{% endmacro %}

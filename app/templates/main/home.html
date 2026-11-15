@@ -3,6 +3,7 @@
 {% from "partials/video.html" import install_video %}
 {% from "partials/countdown.html" import countdown_box %}
 {% from "partials/results.html" import results_grid %}
+{% from "partials/car_of_month.html" import car_of_month_feature %}
 {% block title %}Handmade car fresheners{% endblock %}
 
 {% block content %}
@@ -186,24 +187,8 @@
 
 {# ================= Car of the Month ================= #}
 {% if car_of_month %}
-  {% set member = car_of_month.member %}
   <section class="wrap page-section">
-    <article class="feature-car">
-      {% if member.photo_filename %}
-        <img src="{{ url_for('uploads.uploaded_file', filename=member.photo_filename) }}"
-             alt="{{ member.car_name }}, owned by {{ member.owner_name }}" loading="lazy" width="960" height="720">
-      {% endif %}
-      <div>
-        <div class="tag-row">
-          <span class="eyebrow tag-accent">Car of the Month</span>
-          <span class="part-tag">{{ car_of_month.month }}</span>
-        </div>
-        <h3>{{ member.car_name }}</h3>
-        <p class="muted">Owned by {{ member.owner_name }}</p>
-        <p>{{ car_of_month.blurb }}</p>
-        <a class="text-link" href="{{ url_for('garage.index') }}">Visit the Garage</a>
-      </div>
-    </article>
+    {{ car_of_month_feature(car_of_month) }}
   </section>
 {% endif %}
 {% endblock %}
