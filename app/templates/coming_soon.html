@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="wrap page-section narrow">
+  <div class="work-order">
+    <p class="wo-label">Work order · pending</p>
+    <h1>{{ title }}</h1>
+    <p>This bay is still under construction. It's coming in build stage {{ stage }}.</p>
+    <p><a class="btn" href="{{ url_for('main.home') }}">Back to the shop floor</a></p>
+  </div>
+</section>
+{% endblock %}

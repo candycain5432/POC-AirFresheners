@@ -1,0 +1,13 @@
+# Web framework + database
+Flask==3.1.2
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.44
+# CSRF protection for every form
+Flask-WTF==1.2.2
+# Image validation/re-encoding, and QR code generation
+Pillow==11.3.0
+qrcode==8.2
+# Production web server used inside Docker
+gunicorn==23.0.0
+# Tests
+pytest==8.4.2
