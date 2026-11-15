@@ -6,7 +6,8 @@
   <p class="breadcrumb"><a href="{{ url_for('shop.index') }}">Shop</a> / {{ product.name }}</p>
   <div class="product-detail">
     <div class="product-photo">
-      <img src="{{ url_for('shop.product_image', slug=product.slug) }}" alt="{{ product.name }} (placeholder photo)" width="400" height="400">
+      {# Photo: app/static/img/products/{{ product.slug }}.jpg if it exists, otherwise a drawn placeholder. #}
+      <img src="{{ product_image_url(product) }}" alt="{{ product.name }}" width="800" height="800">
       {% if product.sold_out %}<span class="stamp stamp-sold-out">Sold out</span>{% endif %}
     </div>
     <div>

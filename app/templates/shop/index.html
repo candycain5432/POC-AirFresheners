@@ -2,10 +2,12 @@
 {% block title %}Shop{% endblock %}
 {% block content %}
 <section class="wrap page-section">
-  <p class="eyebrow">Shop</p>
-  <h1 class="page-title">Fresheners that fund a rebuild</h1>
-  <p class="lead">Every freshener comes with its own code, good for one vote on the Revival Car's next part.
-     Every dollar goes into the build fund.</p>
+  <div class="section-head">
+    <p class="eyebrow">Shop</p>
+    <h1 class="page-title">Fresheners that fund a rebuild</h1>
+    <p class="lead">Every freshener comes with its own code, good for one vote on the Revival Car's next part.
+       Every dollar goes into the build fund.</p>
+  </div>
   <nav class="chip-nav" aria-label="Shop sections">
     {% for kind, title, blurb, items in sections if items %}<a href="#{{ kind }}">{{ title }}</a>{% endfor %}
   </nav>
@@ -13,8 +15,10 @@
 
 {% for kind, title, blurb, items in sections if items %}
 <section class="wrap page-section shop-section" id="{{ kind }}">
-  <h2 class="section-title">{{ title }}</h2>
-  <p class="muted">{{ blurb }}</p>
+  <div class="section-head">
+    <h2 class="section-title">{{ title }}</h2>
+    <p class="muted">{{ blurb }}</p>
+  </div>
   <div class="product-grid">
     {% for p in items %}{% include "shop/_product_card.html" %}{% endfor %}
   </div>

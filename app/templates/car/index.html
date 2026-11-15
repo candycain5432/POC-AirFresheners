@@ -10,11 +10,36 @@
 
 {# ---------- Profile ---------- #}
 <section class="wrap page-section">
-  <p class="eyebrow">The Revival Car</p>
-  <h1 class="page-title">{{ car.nickname }}</h1>
-  <p class="lead">{{ car.description }}{% if car.acquired_on %}. Rescued {{ car.acquired_on | nice_date }}.{% endif %}</p>
+  <div class="section-head">
+    <p class="eyebrow">The Revival Car</p>
+    <h1 class="page-title">{{ car.nickname }}</h1>
+    <p class="lead">{{ car.description }}{% if car.acquired_on %}. Rescued {{ car.acquired_on | nice_date }}.{% endif %}</p>
+  </div>
+
+  {# ---------- Before / Now comparison slider ----------
+     REAL PHOTOS GO HERE: replace
+         app/static/img/lazarus-before.jpg   (as found)
+         app/static/img/lazarus-now.jpg      (today)
+     Use the SAME angle and framing for both (about 1600 x 1000) so the slider lines up.
+     Without JavaScript the two photos simply sit side by side. #}
+  <div class="compare">
+    <figure class="compare-before">
+      <img src="{{ url_for('static', filename='img/lazarus-before.jpg') }}" alt="{{ car.nickname }} as found in the hayfield" width="1600" height="1000">
+      <figcaption>Before</figcaption>
+    </figure>
+    <figure class="compare-now">
+      <img src="{{ url_for('static', filename='img/lazarus-now.jpg') }}" alt="{{ car.nickname }} today, in primer with a new red door" width="1600" height="1000">
+      <figcaption>Now</figcaption>
+    </figure>
+    <span class="compare-handle" aria-hidden="true"></span>
+    <input class="compare-range" type="range" min="0" max="100" value="50"
+           aria-label="Compare before and now: slide to reveal more of each photo">
+  </div>
+  <p class="compare-hint compare-hint-js">Drag the slider to compare the hayfield find with the car today.</p>
+  <p class="compare-hint compare-hint-nojs">Left: as found. Right: today.</p>
 
   {% if car.photos %}
+    <h2 class="section-title gallery-title">From the shop floor</h2>
     {# Swipeable on phones (CSS scroll-snap), a grid on wider screens. #}
     <div class="gallery" tabindex="0" aria-label="Photos of {{ car.nickname }}">
       {% for photo in car.photos %}
@@ -31,7 +56,7 @@
 {# ---------- Story + money, side by side on desktop ---------- #}
 <section class="wrap page-section car-overview">
   <div>
-    <h2 class="section-title">The story</h2>
+    <div class="section-head"><h2 class="section-title">The story</h2></div>
     <div class="story">
       {# Split on blank lines into paragraphs; each part is still auto-escaped. #}
       {% for paragraph in car.story.split('\n\n') %}<p>{{ paragraph }}</p>{% endfor %}
@@ -49,7 +74,7 @@
 
 {# ---------- Completed parts ---------- #}
 <section class="wrap page-section">
-  <h2 class="section-title">Parts installed <span class="count">{{ installs | length }}</span></h2>
+  <div class="section-head"><h2 class="section-title">Parts installed <span class="count">{{ installs | length }}</span></h2></div>
   <div class="install-list">
     {% for install in installs %}
       <article class="install-card" id="install-{{ install.id }}">
@@ -86,7 +111,7 @@
 
 {# ---------- Build log timeline ---------- #}
 <section class="wrap page-section narrow">
-  <h2 class="section-title">Build log</h2>
+  <div class="section-head"><h2 class="section-title">Build log</h2></div>
   <ol class="timeline">
     {% for entry in timeline %}
       <li class="timeline-item timeline-{{ entry.kind }}">

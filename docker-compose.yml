@@ -9,8 +9,8 @@ services:
     volumes:
       # The SQLite database and uploaded photos live in a named volume,
       # so they survive container rebuilds.
-      - rr_data:/data
+      - salvage_data:/data
     restart: unless-stopped
 
 volumes:
-  rr_data:
+  salvage_data:

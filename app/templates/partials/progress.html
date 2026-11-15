@@ -7,7 +7,10 @@
 {% macro progress_bar(fund, heading_level=2) %}
 <section class="progress-card" aria-labelledby="progress-heading">
   {% if fund.goal %}
-    <p class="eyebrow">Now funding<span class="dot">·</span>{{ fund.goal.tier | tier_label }}</p>
+    <div class="tag-row">
+      <span class="eyebrow tag-accent">Now funding</span>
+      <span class="part-tag">{{ fund.goal.tier | tier_label }}</span>
+    </div>
     <h{{ heading_level }} id="progress-heading" class="progress-part">{{ fund.goal.part_name }}</h{{ heading_level }}>
     <p class="progress-remaining">
       {% if fund.funded %}
@@ -28,7 +31,7 @@
       <span>{{ fund.percent }}%</span>
     </p>
   {% else %}
-    <p class="eyebrow">Now funding</p>
+    <div class="tag-row"><span class="eyebrow tag-accent">Now funding</span></div>
     <h{{ heading_level }} id="progress-heading" class="progress-part">Next part: you decide</h{{ heading_level }}>
     <p class="progress-remaining">No part is being funded right now. The next vote sets the goal.</p>
   {% endif %}

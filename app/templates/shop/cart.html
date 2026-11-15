@@ -12,7 +12,7 @@
       <ul class="cart-lines">
         {% for line in lines %}
           <li class="cart-line {{ 'is-unavailable' if not line.available }}">
-            <img src="{{ url_for('shop.product_image', slug=line.product.slug) }}" alt="" width="64" height="64">
+            <img src="{{ product_image_url(line.product) }}" alt="" width="64" height="64">
             <div class="cart-line-info">
               <strong>{{ line.product.name }}</strong>
               <span class="muted">{{ line.product.price_cents | money }} each</span>

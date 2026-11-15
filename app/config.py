@@ -23,7 +23,7 @@ class Config:
 
     # SQLite database file. SQLAlchemy URL format: sqlite:///<absolute path>
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///" + os.path.join(INSTANCE_DIR, "rust_revival.db")
+        "DATABASE_URL", "sqlite:///" + os.path.join(INSTANCE_DIR, "salvage_scent.db")
     )
 
     # Where uploaded/generated images live, and the largest request we accept.

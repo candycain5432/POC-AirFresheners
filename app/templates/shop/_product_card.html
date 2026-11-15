@@ -1,8 +1,9 @@
 {# One product card. Included by shop/index.html with `p` set. #}
 <article class="product-card {{ 'is-sold-out' if p.sold_out }}">
   <a class="product-photo" href="{{ url_for('shop.product', slug=p.slug) }}">
-    <img src="{{ url_for('shop.product_image', slug=p.slug) }}" alt="{{ p.name }} (placeholder photo)"
-         width="400" height="400" loading="lazy">
+    {# Photo: app/static/img/products/<slug>.jpg if it exists, otherwise a drawn placeholder. #}
+    <img src="{{ product_image_url(p) }}" alt="{{ p.name }}"
+         width="800" height="800" loading="lazy">
     {% if p.sold_out %}<span class="stamp stamp-sold-out">Sold out</span>{% endif %}
   </a>
   <div class="product-body">

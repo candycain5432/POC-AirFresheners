@@ -7,9 +7,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Rust &amp; Revival{% endblock %} · Rust &amp; Revival</title>
+  <title>{% block title %}Salvage &amp; Scent{% endblock %} · Salvage &amp; Scent</title>
   <meta name="description" content="{% block description %}Handmade car air fresheners. Every sale helps bring a dead car back to life.{% endblock %}">
   <meta name="theme-color" content="#f4f1ea">
+  <meta property="og:site_name" content="Salvage &amp; Scent">
+  <meta property="og:title" content="{{ self.title() }} · Salvage &amp; Scent">
+  <meta property="og:description" content="{{ self.description() }}">
   {# Preload the two fonts every page uses, so text appears in the right font sooner. #}
   <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-latin-400-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ url_for('static', filename='fonts/barlow-condensed-latin-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
@@ -23,13 +26,13 @@
   <header class="site-header">
     <div class="checker-strip" aria-hidden="true"></div>
     <div class="wrap header-row">
-      <a class="logo" href="{{ url_for('main.home') }}" aria-label="Rust and Revival home">
+      <a class="logo" href="{{ url_for('main.home') }}" aria-label="Salvage and Scent home">
         {# Simple hex-bolt mark drawn in SVG: no carmaker logos anywhere. #}
         <svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true">
           <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" />
           <circle cx="20" cy="20" r="7" />
         </svg>
-        <span class="logo-text">Rust <span class="amp">&amp;</span> Revival</span>
+        <span class="logo-text">Salvage <span class="amp">&amp;</span> Scent</span>
       </a>
       {# Cart link sits outside the menu so it's always one tap away on phones. #}
       <a class="cart-link" href="{{ url_for('shop.cart') }}">
@@ -78,7 +81,7 @@
     <div class="wrap footer-row">
       <p class="poc-note">Proof of concept: no real purchases are processed.</p>
       <p class="muted">Handmade aroma-bead fresheners. Every sale funds the Revival Car.</p>
-      <p class="muted">© {{ current_year }} Rust &amp; Revival</p>
+      <p class="muted">© {{ current_year }} Salvage &amp; Scent</p>
     </div>
   </footer>
 </body>
