@@ -2,6 +2,7 @@
 
 
 def register_blueprints(app):
+    from .admin import bp as admin_bp
     from .car import bp as car_bp
     from .garage import bp as garage_bp
     from .main import bp as main_bp
@@ -10,7 +11,7 @@ def register_blueprints(app):
     from .uploads import bp as uploads_bp
     from .vote import bp as vote_bp
 
-    for bp in (main_bp, car_bp, shop_bp, vote_bp, garage_bp, meets_bp, uploads_bp):
+    for bp in (main_bp, car_bp, shop_bp, vote_bp, garage_bp, meets_bp, uploads_bp, admin_bp):
         app.register_blueprint(bp)
 
     # Friendly error pages instead of Flask's plain defaults.

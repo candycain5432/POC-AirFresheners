@@ -93,3 +93,17 @@ def delete_profile(member):
     delete_upload(member.photo_filename)
     db.session.delete(member)
     db.session.commit()
+
+
+# ---------------------------------------------------------------- admin actions
+def set_hidden(member, hidden):
+    member.is_hidden = hidden
+    db.session.commit()
+
+
+def feature_member(member, month, blurb=""):
+    """Make this car the Car of the Month (the newest pick is the current one)."""
+    pick = CarOfTheMonth(member_id=member.id, month=month, blurb=blurb)
+    db.session.add(pick)
+    db.session.commit()
+    return pick

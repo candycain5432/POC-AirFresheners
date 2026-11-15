@@ -1,0 +1,22 @@
+{% extends "admin/layout.html" %}
+{% block title %}Print: {{ batch.label }}{% endblock %}
+{% block admin %}
+<div class="no-print print-help">
+  <p class="breadcrumb"><a href="{{ url_for('admin.code_batch', batch_id=batch.id) }}">{{ batch.label }}</a> / Print</p>
+  <h1 class="page-title">Tag sheet</h1>
+  <p>Use your browser's <strong>Print</strong> (Ctrl/Cmd + P). Only the tags are printed: cut along the dashed lines.
+    Each QR code opens the vote page with that code filled in.</p>
+</div>
+<div class="print-sheet">
+  {% for t in tags %}
+    <div class="print-tag">
+      <img src="{{ t.qr }}" alt="QR code for {{ t.code }}" width="120" height="120">
+      <div>
+        <p class="print-brand">Salvage &amp; Scent</p>
+        <p class="print-code">{{ t.code }}</p>
+        <p class="print-hint">Scan to vote, or enter at<br>{{ vote_url }}</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

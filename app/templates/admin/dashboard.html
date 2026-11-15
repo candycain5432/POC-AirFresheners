@@ -1,0 +1,58 @@
+{% extends "admin/layout.html" %}
+{% from "partials/progress.html" import progress_bar %}
+{% block title %}Admin dashboard{% endblock %}
+{% block admin %}
+<h1 class="page-title">Dashboard</h1>
+
+<div class="admin-stats">
+  <div class="stat"><span class="stat-label">Raised</span><span class="stat-value">{{ fund.raised | money(false) }}</span></div>
+  <div class="stat"><span class="stat-label">Spent</span><span class="stat-value">{{ fund.spent | money(false) }}</span></div>
+  <div class="stat"><span class="stat-label">In the kitty</span><span class="stat-value accent">{{ fund.on_hand | money(false) }}</span></div>
+  <div class="stat"><span class="stat-label">Paid orders</span><span class="stat-value">{{ order_count }}</span></div>
+  <div class="stat"><span class="stat-label">Codes issued</span><span class="stat-value">{{ code_count }}</span></div>
+  <div class="stat"><span class="stat-label">Garage cars</span><span class="stat-value">{{ member_count }}{% if hidden_count %} <small class="muted">({{ hidden_count }} hidden)</small>{% endif %}</span></div>
+</div>
+
+<div class="admin-grid">
+  <div>
+    <h2 class="admin-h2">Funding</h2>
+    {{ progress_bar(fund) }}
+    <p><a class="text-link" href="{{ url_for('admin.installs') }}">Log an install</a></p>
+  </div>
+  <div>
+    <h2 class="admin-h2">Vote</h2>
+    <div class="admin-card">
+      {% if open_round %}
+        <p class="tag-row"><span class="eyebrow tag-accent">Open</span></p>
+        <h3>{{ open_round.title }}</h3>
+        <p>{{ results.total }} votes · closes {{ open_round.closes_at | local_datetime }}</p>
+        <a class="btn btn-small" href="{{ url_for('admin.round_detail', round_id=open_round.id) }}">Manage round</a>
+      {% else %}
+        <p>No round is open.</p>
+        <a class="btn btn-small" href="{{ url_for('admin.rounds') }}">Start a round</a>
+      {% endif %}
+    </div>
+    <h2 class="admin-h2">Next meet</h2>
+    <div class="admin-card">
+      {% if next_meet %}
+        <h3>{{ next_meet.meet_name }}</h3>
+        <p>{{ next_meet.meet_date | nice_date }} · {{ next_meet.location }} · {{ next_meet.scent_name }}{% if next_meet.sold_out %} · <strong>sold out</strong>{% endif %}</p>
+      {% else %}<p>Nothing scheduled.</p>{% endif %}
+      <a class="btn btn-small btn-ghost" href="{{ url_for('admin.meets') }}">Manage meets</a>
+    </div>
+  </div>
+</div>
+
+<h2 class="admin-h2">Recent orders</h2>
+<div class="table-wrap">
+  <table class="admin-table">
+    <thead><tr><th>Order</th><th>When</th><th>Customer</th><th>Items</th><th class="num">Total</th></tr></thead>
+    <tbody>
+      {% for o in recent_orders %}
+        <tr><td><code>{{ o.reference }}</code></td><td>{{ o.created_at | local_datetime }}</td><td>{{ o.customer_name }}</td>
+            <td>{{ o.items | map(attribute='product_name') | join(', ') }}</td><td class="num">{{ o.total_cents | money }}</td></tr>
+      {% else %}<tr><td colspan="5">No orders yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

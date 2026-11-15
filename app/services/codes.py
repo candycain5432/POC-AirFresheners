@@ -73,3 +73,28 @@ def new_order_reference():
         ref = "SS-" + "".join(secrets.choice(ALPHABET) for _ in range(6))
         if not Order.query.filter_by(reference=ref).first():
             return ref
+
+
+MAX_BATCH = 500
+
+
+def create_batch(label, count):
+    """Admin: make a labelled batch of codes (e.g. stock for a meet table)."""
+    from ..models import CodeBatch
+    batch = CodeBatch(label=label)
+    db.session.add(batch)
+    create_codes(count, batch=batch)
+    db.session.commit()
+    return batch
+
+
+def batch_csv(batch):
+    """The batch as CSV text: one row per code, with the formatted code."""
+    import csv
+    import io
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["code", "batch", "created_utc"])
+    for code in sorted(batch.codes, key=lambda c: c.id):
+        writer.writerow([format_code(code.code), batch.label, code.created_at.strftime("%Y-%m-%d %H:%M")])
+    return out.getvalue()

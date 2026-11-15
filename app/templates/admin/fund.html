@@ -1,0 +1,39 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import field, errors_box %}
+{% block title %}Admin: fund{% endblock %}
+{% block admin %}
+<h1 class="page-title">Fund</h1>
+<div class="admin-stats">
+  <div class="stat"><span class="stat-label">Raised</span><span class="stat-value">{{ fund.raised | money }}</span></div>
+  <div class="stat"><span class="stat-label">Spent on installs</span><span class="stat-value">{{ fund.spent | money }}</span></div>
+  <div class="stat"><span class="stat-label">In the kitty</span><span class="stat-value accent">{{ fund.on_hand | money }}</span></div>
+</div>
+<div class="admin-grid">
+  <section class="admin-card">
+    <h2 class="admin-h2">Manual adjustment</h2>
+    <p>For cash sales at meets, donations, or corrections. Use a minus sign to take money out (e.g. <code>-25</code>).
+      Install costs are subtracted automatically when you log an install.</p>
+    {{ errors_box(form) }}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ field(form, "amount", "Amount ($)", placeholder="125.00") }}
+      {{ field(form, "note", "Note", maxlength=200, placeholder="Cash sales at Frost Fest") }}
+      <button class="btn" type="submit">Add to ledger</button>
+    </form>
+  </section>
+  <section>
+    <h2 class="admin-h2">Ledger (latest 50)</h2>
+    <div class="table-wrap">
+      <table class="admin-table">
+        <thead><tr><th>When</th><th>Source</th><th>Note</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          {% for e in entries %}
+            <tr><td>{{ e.created_at | local_datetime }}</td><td>{{ e.source }}</td><td>{{ e.note }}</td>
+                <td class="num {{ 'negative' if e.amount_cents < 0 }}">{{ e.amount_cents | money }}</td></tr>
+          {% else %}<tr><td colspan="4">No entries yet.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

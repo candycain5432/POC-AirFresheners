@@ -1,0 +1,85 @@
+{% extends "admin/layout.html" %}
+{% from "admin/_macros.html" import action_button %}
+{% from "partials/results.html" import results_grid %}
+{% block title %}Admin: {{ round.title }}{% endblock %}
+{% block admin %}
+<p class="breadcrumb"><a href="{{ url_for('admin.rounds') }}">Vote rounds</a> / {{ round.title }}</p>
+<div class="tag-row"><span class="status-pill status-{{ {'open': 'on-sale', 'draft': 'meet-only', 'closed': 'over'}[round.status] }}">{{ round.status }}</span></div>
+<h1 class="page-title">{{ round.title }}</h1>
+{% if round.description %}<p class="lead">{{ round.description }}</p>{% endif %}
+
+{% if round.status == 'draft' %}
+  {# ---------------- Draft: build the ballot ---------------- #}
+  <div class="admin-grid">
+    <section>
+      <h2 class="admin-h2">Parts and tiers</h2>
+      {% for option in round.options %}
+        <div class="admin-card builder-option">
+          <div class="builder-head">
+            <h3>{{ option.name }}</h3>
+            {{ action_button(url_for('admin.round_delete_option', option_id=option.id), 'Remove part', confirm='Remove ' ~ option.name ~ ' and its tiers?') }}
+          </div>
+          {% if option.description %}<p class="muted">{{ option.description }}</p>{% endif %}
+          <ul class="admin-list">
+            {% for tier in option.tiers %}
+              <li><span class="part-tag">{{ tier.level_label }}</span> <strong>{{ tier.goal_cents | money(false) }}</strong>
+                  <span class="muted">{{ tier.description }}</span>
+                  {{ action_button(url_for('admin.round_delete_tier', tier_id=tier.id), 'Remove') }}</li>
+            {% else %}<li class="muted">No tiers yet.</li>{% endfor %}
+          </ul>
+          <form method="post" action="{{ url_for('admin.round_add_tier', option_id=option.id) }}" class="builder-tier-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="visually-hidden" for="lvl-{{ option.id }}">Tier</label>
+            <select id="lvl-{{ option.id }}" name="level">{% for level, label in tier_levels %}<option value="{{ level }}">{{ label }}</option>{% endfor %}</select>
+            <label class="visually-hidden" for="goal-{{ option.id }}">Goal in dollars</label>
+            <input id="goal-{{ option.id }}" name="goal" type="text" inputmode="decimal" placeholder="Goal $" required>
+            <label class="visually-hidden" for="desc-{{ option.id }}">Tier description</label>
+            <input id="desc-{{ option.id }}" name="description" type="text" maxlength="200" placeholder="e.g. Reclaimed bucket seats">
+            <button class="btn btn-small" type="submit">Add tier</button>
+          </form>
+        </div>
+      {% endfor %}
+      <form method="post" action="{{ url_for('admin.round_add_option', round_id=round.id) }}" class="admin-card">
+        <h3>Add a part</h3>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field"><label for="opt-name">Part name</label><input id="opt-name" name="name" type="text" maxlength="120" required placeholder="Seats"></div>
+        <div class="field"><label for="opt-desc">Description <span class="muted">(optional)</span></label><input id="opt-desc" name="description" type="text" maxlength="300" placeholder="The driver's seat is mostly springs."></div>
+        <button class="btn btn-small" type="submit">Add part</button>
+      </form>
+    </section>
+    <section class="admin-card">
+      <h2 class="admin-h2">Open for voting</h2>
+      <p>Needs at least two tiers in total. Only one round can be open at a time.</p>
+      <form method="post" action="{{ url_for('admin.round_open', round_id=round.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field"><label for="closes">Voting closes</label>
+          <input id="closes" name="closes_at" type="datetime-local" required>
+          <p class="field-hint">Your local time ({{ config.SHOP_TIMEZONE }}).</p></div>
+        <button class="btn" type="submit">Open the round</button>
+      </form>
+      <hr class="admin-hr">
+      {{ action_button(url_for('admin.round_delete', round_id=round.id), 'Delete draft', confirm='Delete this draft?') }}
+    </section>
+  </div>
+
+{% else %}
+  {# ---------------- Open or closed: results and controls ---------------- #}
+  {% if round.status == 'open' %}
+    <div class="admin-card admin-actions-card">
+      <p>Closes <strong>{{ round.closes_at | local_datetime }}</strong> ({{ config.SHOP_TIMEZONE }}).</p>
+      <form method="post" action="{{ url_for('admin.round_close_time', round_id=round.id) }}" class="builder-tier-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="new-close">New close time</label>
+        <input id="new-close" name="closes_at" type="datetime-local" required value="{{ closes_local.strftime('%Y-%m-%dT%H:%M') if closes_local }}">
+        <button class="btn btn-small btn-ghost" type="submit">Change close time</button>
+      </form>
+      {{ action_button(url_for('admin.round_close', round_id=round.id), 'Close round now', style='', confirm='Close voting now? The leading choice becomes a funding goal.') }}
+    </div>
+  {% else %}
+    <p class="notice">Closed {{ round.closed_at | local_datetime }}.
+      {% if round.winning_tier %}Winner: <strong>{{ round.winning_tier.option.name }}</strong> ({{ round.winning_tier.level_label }}, {{ round.winning_tier.goal_cents | money(false) }}).{% else %}No votes were cast.{% endif %}</p>
+  {% endif %}
+  <h2 class="admin-h2">Results ({{ results.total }} votes)</h2>
+  {{ results_grid(results, leading_word='Leading' if round.status == 'open' else 'Winner') }}
+{% endif %}
+{% endblock %}

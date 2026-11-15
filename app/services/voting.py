@@ -9,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
-from ..models import PartTier, Vote, VoteRound
+from ..models import PartOption, PartTier, Vote, VoteRound
 from ..models._common import utcnow
 from .fund import add_goal
 
@@ -161,3 +161,82 @@ def close_expired_rounds():
 
 def closed_rounds():
     return VoteRound.query.filter_by(status="closed").order_by(VoteRound.closed_at.desc()).all()
+
+
+
+# ---------------------------------------------------------------- admin: building rounds
+# A round starts as a "draft": the admin adds parts and tiers, then opens it.
+# Parts and tiers can only change while it's a draft, so nobody's vote can
+# end up pointing at something that was edited or removed.
+
+def create_round(title, description=""):
+    round_ = VoteRound(title=title, description=description, status="draft")
+    db.session.add(round_)
+    db.session.commit()
+    return round_
+
+
+def add_option(round_, name, description=""):
+    _require_draft(round_)
+    option = PartOption(name=name, description=description, position=len(round_.options))
+    round_.options.append(option)
+    db.session.commit()
+    return option
+
+
+def add_tier(option, level, goal_cents, description=""):
+    _require_draft(option.round)
+    if any(t.level == level for t in option.tiers):
+        raise VoteError(f"{option.name} already has a {level} tier.")
+    tier = PartTier(level=level, goal_cents=goal_cents, description=description)
+    option.tiers.append(tier)
+    db.session.commit()
+    return tier
+
+
+def delete_option(option):
+    _require_draft(option.round)
+    db.session.delete(option)
+    db.session.commit()
+
+
+def delete_tier(tier):
+    _require_draft(tier.option.round)
+    db.session.delete(tier)
+    db.session.commit()
+
+
+def open_round(round_, closes_at):
+    """Open a draft for voting until closes_at (naive UTC)."""
+    _require_draft(round_)
+    if sum(len(o.tiers) for o in round_.options) < 2:
+        raise VoteError("Add at least two choices (tiers) before opening the round.")
+    if closes_at <= utcnow():
+        raise VoteError("The close time must be in the future.")
+    if current_round() is not None:
+        raise VoteError("Another round is already open. Close it first: only one vote runs at a time.")
+    round_.status = "open"
+    round_.opened_at = utcnow()
+    round_.closes_at = closes_at
+    db.session.commit()
+
+
+def set_close_time(round_, closes_at):
+    """Move an open round's close time (e.g. extend it)."""
+    if round_.status != "open":
+        raise VoteError("Only an open round's close time can be changed.")
+    if closes_at <= utcnow():
+        raise VoteError("The close time must be in the future. To end the round now, use Close round.")
+    round_.closes_at = closes_at
+    db.session.commit()
+
+
+def delete_round(round_):
+    _require_draft(round_)
+    db.session.delete(round_)
+    db.session.commit()
+
+
+def _require_draft(round_):
+    if round_.status != "draft":
+        raise VoteError("Parts and tiers can only be changed while the round is a draft.")

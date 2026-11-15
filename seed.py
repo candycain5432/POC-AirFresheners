@@ -32,7 +32,7 @@ from app.models import (
 from app.models._common import utcnow
 from app.models.shop import BlindBagResult
 from app.services.codes import create_codes, format_code, new_order_reference
-from app.services.meets import shop_today
+from app.services.clock import shop_today
 from seed_images import make_placeholder
 
 # A fixed random seed means the sample data looks the same every run

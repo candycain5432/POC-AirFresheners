@@ -9,17 +9,11 @@ Meet drops: car meets where we sell an exclusive scent.
     meet_ics()        an .ics calendar file so people can add a meet to their phone calendar
 """
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 
-from flask import current_app
-
-from ..models import MeetDrop
+from ..extensions import db
+from ..models import MeetDrop, Product
 from .cart import can_buy
-
-
-def shop_today():
-    """Meet dates are local dates, so "today" must be the shop's local day, not UTC's."""
-    return datetime.now(ZoneInfo(current_app.config["SHOP_TIMEZONE"])).date()
+from .clock import shop_today  # noqa: F401  (meet dates are local dates; re-exported for callers)
 
 
 def upcoming_meets(today):
@@ -126,3 +120,47 @@ def meet_ics(meet, page_url):
         "END:VCALENDAR",
     ]
     return "\r\n".join(_fold(line) for line in lines) + "\r\n"
+
+
+# ---------------------------------------------------------------- admin actions
+def create_meet(meet_name, meet_date, location, scent_name, scent_description, quantity,
+                sell_online=False, price_cents=1000):
+    """Add a meet. With sell_online, also create its exclusive product in the shop."""
+    meet = MeetDrop(meet_name=meet_name, meet_date=meet_date, location=location, scent_name=scent_name,
+                    scent_description=scent_description, quantity=quantity)
+    db.session.add(meet)
+    db.session.flush()   # gives the meet an id
+    if sell_online:
+        slug = _unique_slug("meet-" + "-".join(scent_name.lower().split()))
+        db.session.add(Product(
+            slug=slug, name=f"{scent_name} (Meet Exclusive)", kind="meet", meet_drop_id=meet.id,
+            scent_description=f"{scent_description} Only made for {meet_name}.".strip(),
+            price_cents=price_cents, accent_color="#9c2a3a", position=100 + meet.id,
+        ))
+    db.session.commit()
+    return meet
+
+
+def _unique_slug(base):
+    base = "".join(ch for ch in base if ch.isalnum() or ch == "-")[:70] or "meet"
+    slug, n = base, 2
+    while Product.query.filter_by(slug=slug).first():
+        slug, n = f"{base}-{n}", n + 1
+    return slug
+
+
+def set_meet_sold_out(meet, sold_out):
+    """Mark a meet (and its exclusive product, so the shop agrees) sold out or back in stock."""
+    meet.sold_out = sold_out
+    for product in meet.products:
+        product.sold_out = sold_out
+    db.session.commit()
+
+
+def delete_meet(meet):
+    """Delete a meet. Its product is retired (kept for old orders) rather than deleted."""
+    for product in meet.products:
+        product.is_active = False
+        product.meet_drop_id = None
+    db.session.delete(meet)
+    db.session.commit()

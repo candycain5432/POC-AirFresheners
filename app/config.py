@@ -35,6 +35,11 @@ class Config:
     #   python -m flask --app app hash-password
     ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
 
+    # Admin login protection: wrong passwords allowed per IP per window, and
+    # how long an admin stays logged in without doing anything.
+    ADMIN_LOGIN_ATTEMPT_LIMIT = int(os.environ.get("ADMIN_LOGIN_ATTEMPT_LIMIT", "5"))
+    ADMIN_SESSION_MINUTES = int(os.environ.get("ADMIN_SESSION_MINUTES", "120"))
+
     # Which payment provider checkout uses. Only "mock" exists for now;
     # see app/services/payments.py for how to add Stripe test mode.
     PAYMENT_PROVIDER = os.environ.get("PAYMENT_PROVIDER", "mock")

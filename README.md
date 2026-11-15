@@ -19,7 +19,7 @@ plain CSS and a little vanilla JS. No frontend framework.
 | 4 | Voting | ✅ done |
 | 5 | The Garage | ✅ done |
 | 6 | Meet drops | ✅ done |
-| 7 | Admin panel | ⏳ |
+| 7 | Admin panel | ✅ done |
 
 ## Run it locally
 
@@ -65,7 +65,31 @@ python -m flask --app app hash-password
 ```
 
 Paste the printed `ADMIN_PASSWORD_HASH='...'` line into `.env`. Keep the single
-quotes, because the hash contains `$` characters.
+quotes, because the hash contains `$` characters. Restart the app, then go to
+**`/admin`**. Without a hash, admin login is switched off.
+
+If you run locally without a `.env` loader, set it in your shell instead:
+`export ADMIN_PASSWORD_HASH='scrypt:...'` before `python -m flask --app app run`.
+
+## The admin panel (`/admin`)
+
+| Section | What it does |
+|---|---|
+| Dashboard | Money raised / spent / in the kitty, the current goal, the open vote, the next meet, recent orders |
+| Codes | Make a batch of codes (up to 500) for fresheners sold in person. Each batch has a **printable tag sheet** (QR code + code, cut along the dashed lines), a **CSV**, and a **ZIP of QR images** (one PNG per code) |
+| Vote rounds | Create a draft, add parts and their budget / mid-range / high-end tiers, then **open** it with a close time (your local time). Extend the close time or **close it now**. The winner becomes the funding goal (or "Up next") |
+| Installs | Log a finished install: part, tier, real cost, date, YouTube/TikTok link, before/after photos. Tick "completes the current goal" to move the progress bar on to the next part. Edit installs later (e.g. to add the real video) |
+| Meets | Add meets (optionally selling the exclusive scent online), mark sold out / back in stock (the shop follows), delete |
+| Garage | Hide or unhide cars instantly, and pick the Car of the Month |
+| Fund | The ledger, plus manual adjustments (cash sales, donations, or negative corrections) |
+
+**Security:**
+- Only the password hash is stored.
+- 5 wrong passwords from one IP in 15 minutes locks that IP out.
+- The admin is logged out after 2 hours of inactivity (`ADMIN_SESSION_MINUTES`).
+- Every admin form has CSRF protection.
+- Admin pages are sent with `Cache-Control: no-store` and
+  `X-Robots-Tag: noindex`, so they aren't cached or indexed by search engines.
 
 ## Settings (environment variables)
 
@@ -76,6 +100,8 @@ quotes, because the hash contains `$` characters.
 | `DATABASE_URL` | SQLAlchemy URL | `sqlite:///instance/salvage_scent.db` |
 | `INSTANCE_DIR` | Folder for database + uploads | `./instance` (`/data` in Docker) |
 | `CODE_ATTEMPT_LIMIT` / `CODE_ATTEMPT_WINDOW_MINUTES` | Wrong-code lockout | 10 per 15 min |
+| `ADMIN_LOGIN_ATTEMPT_LIMIT` | Wrong admin passwords allowed per IP per window | 5 |
+| `ADMIN_SESSION_MINUTES` | Idle minutes before the admin is logged out | 120 |
 | `TRUST_PROXY` | Set `1` behind nginx/a PaaS so real visitor IPs are used | `0` |
 | `SHOP_TIMEZONE` | Your local time zone; decides which meets are "upcoming" today | `America/New_York` |
 | `SESSION_COOKIE_SECURE` | Set `1` when served over HTTPS | `0` |
@@ -111,6 +137,9 @@ app/
     garage.py          Garage profiles: code-as-key, save/delete, Car of the Month
     uploads.py         safe photo uploads (validate, resize, strip EXIF/GPS, random names)
     meets.py           upcoming/past meets, status, "in 3 weeks", .ics calendar files
+    clock.py           local time (SHOP_TIMEZONE) <-> UTC stored in the database
+    installs.py        logging installs: photos, video check, completing the current goal
+    admin_auth.py      admin password check (hash only) and idle timeout
     catalog.py         featured products, lowest price, product photo paths
   routes/              one Flask blueprint per site section
     main.py            home page
@@ -119,6 +148,8 @@ app/
     vote.py            ballot (code + part/tier), results page, past rounds
     garage.py          Garage grid, car pages, join with a code, edit, delete
     meets.py           meet drops page + "Add to calendar" (.ics) downloads
+    admin/             the admin panel: one file per section (auth, dashboard,
+                       codes, rounds, installs, meets, garage, fund) + forms.py
     errors.py          friendly 404 / 413 / 500 pages
   templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
   static/css/style.css the whole look: mobile-first, dark garage theme, no framework
