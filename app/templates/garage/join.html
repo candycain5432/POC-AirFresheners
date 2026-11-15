@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Add your car{% endblock %}
+{% block content %}
+<section class="wrap page-section narrow">
+  <div class="section-head">
+    <p class="eyebrow">The Garage</p>
+    <h1 class="page-title">Add your car</h1>
+    <p class="lead">Enter any freshener code. It becomes the key to your car's page: use the same code later to edit it.</p>
+  </div>
+
+  {% if error %}<div class="error-summary" role="alert"><strong>{{ error }}</strong></div>{% endif %}
+
+  <form method="post" class="join-form" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="code">Freshener code</label>
+    <input id="code" name="code" type="text" class="code-input" maxlength="30" autocomplete="off"
+           autocapitalize="characters" spellcheck="false" placeholder="K7PX-M3QD-WR" required
+           aria-describedby="code-hint" {% if error %}aria-invalid="true"{% endif %}>
+    <p class="field-hint" id="code-hint">On your freshener's tag or your order confirmation. One car per code.
+      Keep the code private: anyone who has it can edit your car's page.</p>
+    <button class="btn btn-large btn-block-mobile" type="submit">Continue</button>
+  </form>
+  <a class="text-link" href="{{ url_for('shop.index') }}">No code yet? Every freshener comes with one</a>
+</section>
+{% endblock %}

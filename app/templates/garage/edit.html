@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "partials/car_photo.html" import car_photo %}
+{% block title %}{{ 'Edit your car' if member else 'Add your car' }}{% endblock %}
+{% block content %}
+<section class="wrap page-section narrow">
+  <div class="section-head">
+    <p class="eyebrow">The Garage</p>
+    <h1 class="page-title">{{ 'Edit ' ~ member.car_name if member else 'Tell us about your car' }}</h1>
+  </div>
+
+  {% if errors %}
+    <div class="error-summary" role="alert">
+      <strong>Not saved yet:</strong>
+      <ul>{% for message in errors.values() %}<li>{{ message }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  {# enctype="multipart/form-data" is required for file uploads. #}
+  <form method="post" enctype="multipart/form-data" class="garage-form" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if not member %}<input type="hidden" name="is_new" value="1">{% endif %}
+
+    <div class="field">
+      <label for="car_name">Car's name</label>
+      <input id="car_name" name="car_name" type="text" maxlength="{{ limits.car_name }}" required
+             value="{{ values.car_name }}" placeholder="e.g. Patina Pete" {% if errors.car_name %}aria-invalid="true"{% endif %}>
+      {% if errors.car_name %}<p class="error-text">{{ errors.car_name }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="owner_name">Your name or handle</label>
+      <input id="owner_name" name="owner_name" type="text" maxlength="{{ limits.owner_name }}" required autocomplete="nickname"
+             value="{{ values.owner_name }}" placeholder="e.g. Tasha R." {% if errors.owner_name %}aria-invalid="true"{% endif %}>
+      <p class="field-hint">Shown publicly. A first name and initial, or your social handle, works well.</p>
+      {% if errors.owner_name %}<p class="error-text">{{ errors.owner_name }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="description">About the car <span class="muted">(optional)</span></label>
+      <textarea id="description" name="description" rows="4" maxlength="{{ limits.description }}"
+                placeholder="Year-ish, what you've done to it, what's next...">{{ values.description }}</textarea>
+      <p class="field-hint">Up to {{ limits.description }} characters. Please don't include your plate number.</p>
+      {% if errors.description %}<p class="error-text">{{ errors.description }}</p>{% endif %}
+    </div>
+
+    <div class="field">
+      <label for="photo">Photo {% if member and member.photo_filename %}<span class="muted">(choose one to replace it)</span>{% else %}<span class="muted">(optional)</span>{% endif %}</label>
+      {% if member and member.photo_filename %}
+        <div class="current-photo">{{ car_photo(member, lazy=False) }}</div>
+        <label class="check-row"><input type="checkbox" name="remove_photo" value="1"> Remove this photo</label>
+      {% endif %}
+      <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" class="file-input"
+             {% if errors.photo %}aria-invalid="true"{% endif %}>
+      <p class="field-hint">JPG, PNG or WebP, up to 5 MB. We resize it and strip location data before it's saved.</p>
+      {% if errors.photo %}<p class="error-text">{{ errors.photo }}</p>{% endif %}
+    </div>
+
+    <button class="btn btn-large btn-block-mobile" type="submit">{{ 'Save changes' if member else 'Park it in the Garage' }}</button>
+  </form>
+
+  <div class="garage-danger">
+    {% if member %}
+      <form method="post" action="{{ url_for('garage.delete') }}" data-confirm="Delete your car's page and photo? This can't be undone.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost btn-small" type="submit">Delete my car's page</button>
+      </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('garage.leave') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-ghost btn-small" type="submit">Forget my code on this device</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

@@ -1,9 +1,10 @@
 """Home page: hero + funding, the open vote, featured products, how it works, latest install."""
 from flask import Blueprint, render_template
 
-from ..models import CarOfTheMonth, Install, RevivalCar
+from ..models import Install, RevivalCar
 from ..services.catalog import featured_products, lowest_price_cents
 from ..services.fund import fund_summary
+from ..services.garage import current_car_of_month
 from ..services.voting import (
     close_expired_rounds, closed_rounds, current_round, round_results, seconds_left, split_duration,
 )
@@ -29,5 +30,5 @@ def home():
         featured=featured_products(4),
         from_price=lowest_price_cents(),
         latest_install=Install.query.order_by(Install.installed_on.desc()).first(),
-        car_of_month=CarOfTheMonth.query.order_by(CarOfTheMonth.created_at.desc()).first(),
+        car_of_month=current_car_of_month(),
     )

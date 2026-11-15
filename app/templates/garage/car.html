@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "partials/car_photo.html" import car_photo %}
+{% block title %}{{ member.car_name }}{% endblock %}
+{% block description %}{{ member.car_name }}, owned by {{ member.owner_name }}, in the Salvage &amp; Scent Garage.{% endblock %}
+
+{% block content %}
+<section class="wrap page-section">
+  <p class="breadcrumb"><a href="{{ url_for('garage.index') }}">The Garage</a> / {{ member.car_name }}</p>
+  <div class="garage-car">
+    <div class="garage-car-photo">{{ car_photo(member, lazy=False) }}</div>
+    <div>
+      <div class="tag-row">
+        <span class="eyebrow">Garage member</span>
+        {% if is_car_of_month %}<span class="eyebrow tag-accent">Car of the Month</span>{% endif %}
+      </div>
+      <h1 class="page-title">{{ member.car_name }}</h1>
+      <p class="lead">Owned by {{ member.owner_name }} · parked {{ member.created_at | nice_date }}</p>
+      {# Plain text only: Jinja escapes it, and line breaks are kept by CSS (white-space: pre-line). #}
+      {% if member.description %}<p class="garage-car-desc">{{ member.description }}</p>{% endif %}
+      {% if is_mine %}
+        <div class="garage-actions"><a class="btn" href="{{ url_for('garage.edit') }}">Edit my car</a></div>
+      {% endif %}
+      <a class="text-link" href="{{ url_for('garage.index') }}">Back to the Garage</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

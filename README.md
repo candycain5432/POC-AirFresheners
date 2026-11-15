@@ -17,7 +17,7 @@ plain CSS and a little vanilla JS. No frontend framework.
 | 2 | Home page and Revival Car page | ✅ done |
 | 3 | Shop and mock checkout with code generation | ✅ done |
 | 4 | Voting | ✅ done |
-| 5 | The Garage | ⏳ |
+| 5 | The Garage | ✅ done |
 | 6 | Meet drops | ⏳ |
 | 7 | Admin panel | ⏳ |
 
@@ -107,12 +107,15 @@ app/
     qr.py              QR code PNGs (as data: URIs) via the `qrcode` library
     voting.py          open round, time left, results, casting votes, closing rounds
     rate_limit.py      locks out an IP after too many wrong codes
+    garage.py          Garage profiles: code-as-key, save/delete, Car of the Month
+    uploads.py         safe photo uploads (validate, resize, strip EXIF/GPS, random names)
     catalog.py         featured products, lowest price, product photo paths
   routes/              one Flask blueprint per site section
     main.py            home page
     car.py             Revival Car page (profile, totals, installs, build log)
     shop.py            product list/detail, SVG placeholder photos, cart, checkout, confirmation
     vote.py            ballot (code + part/tier), results page, past rounds
+    garage.py          Garage grid, car pages, join with a code, edit, delete
     errors.py          friendly 404 / 413 / 500 pages
   templates/           Jinja templates (base.html layout, partials/ for the progress bar and video)
   static/css/style.css the whole look: mobile-first, dark garage theme, no framework
@@ -170,6 +173,20 @@ tests/                 pytest smoke tests
   - The winner becomes the funding goal straight away if nothing is being
     funded. Otherwise it is **queued** ("Up next" on the progress card) and
     becomes active when the current part is installed.
+- **The Garage:**
+  - There are no accounts: a freshener code is the key. After a correct code
+    (rate-limited), its id is kept in the signed session cookie, and that
+    browser can create or edit that code's **one** profile.
+  - The code is never shown on public pages. "Forget my code on this device"
+    clears it.
+  - Hidden profiles (admin moderation, stage 7) disappear from the grid, their
+    page and Car of the Month.
+- **Photo uploads** (`services/uploads.py`):
+  - Limited to 5 MB per request.
+  - Opened with Pillow to prove they are real JPEG, PNG or WebP files.
+    Absurd dimensions are refused before decoding ("decompression bombs").
+  - Rotated upright, shrunk to 1600px, and re-saved as a new JPEG under a
+    random name. This also strips all EXIF data, including GPS location.
 - **Rate limiting** records wrong code guesses per IP in the database, so it
   works across several server processes.
 
