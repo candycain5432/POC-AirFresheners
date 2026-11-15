@@ -32,7 +32,7 @@ class Config:
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
 
     # The admin password is stored ONLY as a hash. Generate one with:
-    #   flask --app app hash-password
+    #   python -m flask --app app hash-password
     ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
 
     # Which payment provider checkout uses. Only "mock" exists for now;

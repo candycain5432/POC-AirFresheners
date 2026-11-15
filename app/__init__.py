@@ -5,7 +5,7 @@ Application factory.
 (instead of a global app object) lets tests and the seed script create their
 own app with different settings.
 
-Run in development with:  flask --app app run --debug
+Run in development with:  python -m flask --app app run --debug
 """
 import os
 

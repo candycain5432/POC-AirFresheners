@@ -29,8 +29,12 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env               # optional locally; defaults work for development
 python seed.py                     # WIPES and fills the database with sample data
-flask --app app run --debug        # http://127.0.0.1:5000
+python -m flask --app app run --debug   # http://127.0.0.1:5000
 ```
+
+Every new terminal needs `source .venv/bin/activate` again. If you see
+`flask: command not found` or `No module named flask`, the virtualenv isn't
+active.
 
 `seed.py` prints a few unused freshener codes at the end. Keep them handy for
 testing voting and the Garage.
@@ -53,7 +57,7 @@ survive rebuilds. `docker compose down -v` deletes them.
 The admin password is never stored, only its hash:
 
 ```bash
-flask --app app hash-password
+python -m flask --app app hash-password
 ```
 
 Paste the printed `ADMIN_PASSWORD_HASH='...'` line into `.env`. Keep the single
